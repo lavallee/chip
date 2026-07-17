@@ -12,9 +12,13 @@
 # created automatically on first workflow run.
 name: Publish to PyPI
 
+# NOTE: the release trigger is disabled until the PyPI pending publisher
+# above is registered — a release before then would just produce a failed
+# run. Once registered, restore:
+#
+#   release:
+#     types: [published]
 on:
-  release:
-    types: [published]
   workflow_dispatch: {}
 
 jobs:
