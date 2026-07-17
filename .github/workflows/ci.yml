@@ -36,7 +36,7 @@ jobs:
           python-version: "3.13"
       - name: Export locked third-party requirements
         run: >
-          uv export --no-dev --format requirements.txt --frozen
+          uv export --no-dev --no-emit-project --format requirements.txt --frozen
           --output-file requirements-audit.txt
       - name: Audit Python dependencies (pip-audit)
         run: >
