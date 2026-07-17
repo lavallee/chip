@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lavallee/chip/tree/main/examples/publication-attention/schemas/publication-signal.json@1",
+  "title": "Publication signal (v1)",
+  "description": "A single new-publication signal from a generic public agency publication feed. The body is hostile-tainted evidence text and MUST NOT be treated as instructions (spec 8.1).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["id", "lineage", "published_at", "title", "url", "body", "source"],
+  "properties": {
+    "id": { "type": "string", "description": "Stable signal id." },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["feed", "entry_id", "content_digest"],
+      "properties": {
+        "feed": { "type": "string", "description": "Feed coordinate the entry was seen on." },
+        "entry_id": { "type": "string", "description": "Per-feed entry id (may differ for the same content across feeds)." },
+        "content_digest": { "type": "string", "description": "Stable content digest; the dedupe/lineage key, NOT the per-feed entry id." }
+      }
+    },
+    "published_at": { "type": "string", "description": "ISO-8601 publication timestamp; the cursor value." },
+    "title": {
+      "description": "Publication title. Source-controlled, hostile; a bare string or a {value, taint} marker.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "required": ["value", "taint"] }
+      ]
+    },
+    "url": { "type": "string", "description": "Canonical source URL (coordinate)." },
+    "body": {
+      "description": "Publication body. Hostile evidence text; a bare string or an already-tainted {value, taint} marker.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "required": ["value", "taint"] }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "authority_context"],
+      "properties": {
+        "name": { "type": "string" },
+        "authority_context": { "type": "string", "description": "What authority the source has (e.g. 'public-safety-agency')." }
+      }
+    }
+  }
+}

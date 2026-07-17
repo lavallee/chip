@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lavallee/chip/tree/main/examples/publication-attention/schemas/materiality-finding.json@1",
+  "title": "Materiality finding (v1)",
+  "description": "An evidence-linked materiality assessment. Cited evidence quotes source text ONLY through taint-preserving quoted_span structures, kept structurally separate from the chip-authored assessment (spec 8.2).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["kind", "assessment", "evidence", "lineage", "producedBy"],
+  "properties": {
+    "kind": { "const": "finding" },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["material", "confidence", "rationale"],
+      "properties": {
+        "material": { "type": "boolean" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rationale": { "type": "string", "description": "Chip/gateway-authored claim. Not a verbatim source span." }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Each item links a claim to a taint-preserving quoted source span, its source URL, and content digest.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["claim", "quoted_span", "source_url", "digest"],
+        "properties": {
+          "claim": { "type": "string" },
+          "quoted_span": {
+            "type": "object",
+            "description": "Taint-preserving structure: {value, taint}. Trust classification survives to the downstream adapter.",
+            "required": ["value", "taint"],
+            "properties": {
+              "value": {},
+              "taint": {
+                "type": "object",
+                "required": ["trust", "source"],
+                "properties": {
+                  "trust": { "type": "string" },
+                  "source": { "type": "string" },
+                  "via": { "type": "array" }
+                }
+              }
+            }
+          },
+          "source_url": { "type": "string" },
+          "digest": { "type": "string" }
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "description": "Passthrough of the originating signal lineage.",
+      "additionalProperties": true,
+      "required": ["feed", "entry_id", "content_digest"],
+      "properties": {
+        "feed": { "type": "string" },
+        "entry_id": { "type": "string" },
+        "content_digest": { "type": "string" }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Confidence, counterevidence, and any abstention pressure."
+    },
+    "counterevidence": { "type": "array" },
+    "expiry": { "type": "string", "description": "Freshness deadline after which the finding must be re-derived." },
+    "producedBy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["chip", "run"],
+      "properties": {
+        "chip": { "type": "string" },
+        "run": { "type": "string" },
+        "circuit": { "type": "string" }
+      }
+    }
+  }
+}

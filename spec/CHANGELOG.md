@@ -6,6 +6,43 @@ implementation.
 
 Schema identifier: `chip.spec/v0alpha1`.
 
+## 0.4.0 — 2026-07-16
+
+Implementation-informed clarifications from the first host (Fab) and the first
+pilot (publication triage). Two independent implementations hit the same seams;
+these edits sharpen the contract without changing the schema identifier (still
+`chip.spec/v0alpha1`).
+
+Clarified:
+
+- **Schema references name a file *and* a version (§7, §11).** A schema reference
+  has the form `path/name.json@N`: the on-disk artifact is the versionless file
+  `path/name.json`, and the `@N` suffix pins the schema version that circuit port
+  compatibility matches on. A host resolves the file half but keeps the whole ref
+  (file **and** version) for exact-string port-compatibility matching.
+- **Effective authority is intersected per requesting chip (§12).** Added a
+  sentence: the chip maximum in the chip ∩ circuit ∩ binding ∩ host ∩ approval
+  intersection is the maximum of the chip *requesting* the effect; a sibling
+  chip's ceiling does not constrain it. A circuit ceiling is a per-chip cap, not a
+  floor min-ed over all members, so an observe-only sensing chip never lowers a
+  downstream chip's effective authority.
+- **Terminal response kinds named (§8.2).** The response envelope's `kind` is
+  exactly one of four run outcomes — `finding`, `quiet`, `abstain`, `needs_input`.
+  The observation/claim/evidence/recommendation/uncertainty/expiry distinctions
+  are envelope **fields** on a `finding`, not separate kinds.
+- **Signal content channel (§8.1).** Added a "content or custody reference"
+  bullet: the payload under assessment, carrying its trust classification as
+  field-level taint, distinct from the lineage/digest metadata; large payloads may
+  use the custody-reference alternative.
+- **Effect-key input sources (§8.3).** Documented the canonical sources of the
+  four key inputs: source lineage from the signal, effect type from the effect
+  declaration, and `target_owner`/`promise_id` binding/manifest-resolved and
+  injected by the host into the activation config as `effect_target` and
+  `promise_id`, so host and implementation derive identical keys.
+- **Entrypoint example (§7.1).** The illustrative manifest entrypoint is now
+  `chip_impl:run`, matching the host execution contract's `impl/chip_impl.py`
+  convention.
+
 ## 0.3.0 — 2026-07-16
 
 First published edition, relocated to this repository

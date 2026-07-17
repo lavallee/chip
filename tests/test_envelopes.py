@@ -32,6 +32,40 @@ def test_signal_missing_field(make_signal):
         Signal.from_dict(data)
 
 
+def test_response_kinds_are_the_four_terminal_outcomes():
+    assert {k.value for k in ResponseKind} == {"finding", "quiet", "abstain", "needs_input"}
+
+
+def test_signal_content_round_trip(make_signal):
+    marked = {"value": "hostile body text", "taint": {"trust": "hostile", "source": "s"}}
+    sig = Signal.from_dict(make_signal(content=marked))
+    assert sig.content == marked
+    again = Signal.from_dict(sig.to_dict())
+    assert again == sig
+    # Absent content stays absent (not serialized).
+    plain = Signal.from_dict(make_signal())
+    assert plain.content is None
+    assert "content" not in plain.to_dict()
+
+
+def test_response_finding_with_recommendation_round_trips():
+    resp = Response(
+        kind=ResponseKind.FINDING,
+        produced_by_chip="chip:x",
+        produced_by_run="run:1",
+        body={"claim": "material", "confidence": 0.8},
+        recommendation={"effectKey": "cek1-abc", "action": "open-research-task"},
+    )
+    back = Response.from_dict(resp.to_dict())
+    assert back == resp
+    assert back.kind is ResponseKind.FINDING
+    assert back.recommendation == {"effectKey": "cek1-abc", "action": "open-research-task"}
+    # abstain and quiet also round-trip cleanly.
+    for kind in (ResponseKind.ABSTAIN, ResponseKind.QUIET):
+        r = Response(kind=kind, produced_by_chip="c", produced_by_run="r")
+        assert Response.from_dict(r.to_dict()).kind is kind
+
+
 def test_response_needs_input_round_trip():
     resp = Response(
         kind=ResponseKind.NEEDS_INPUT,

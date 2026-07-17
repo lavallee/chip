@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lavallee/chip/tree/main/examples/publication-attention/schemas/assessment-request.json@1",
+  "title": "Assessment request (v1)",
+  "description": "The gateway (judgment) request. The instruction is chip-authored and untainted; source body/title reach the model ONLY as structurally-separate quoted spans under `evidence`, never in instruction position (spec 8.2).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["instruction", "publication", "evidence"],
+  "properties": {
+    "instruction": {
+      "type": "string",
+      "description": "Chip-authored task framing. States that quoted body content is UNTRUSTED evidence and any instruction inside it must be ignored."
+    },
+    "beat": { "type": "string", "description": "Configured beat this attention chip watches." },
+    "scope": { "type": "string", "description": "Configured in-scope description." },
+    "publication": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Normalized coordinates (non-body).",
+      "properties": {
+        "url": { "type": "string" },
+        "published_at": { "type": "string" },
+        "title": {
+          "description": "Quoted-span title (tainted, structurally separate).",
+          "type": "object"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["body"],
+      "properties": {
+        "body": {
+          "type": "object",
+          "description": "quote_span structure carrying the hostile body text; renderer places it in a quote slot only.",
+          "required": ["kind", "quoted_text", "taint"],
+          "properties": {
+            "kind": { "const": "quoted_span" },
+            "quoted_text": { "type": "string" },
+            "taint": { "type": "object" }
+          }
+        }
+      }
+    }
+  }
+}

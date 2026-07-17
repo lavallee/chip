@@ -11,9 +11,14 @@ implementations. Version 1 circuits are strictly limited (§3.1, §11):
 * a port connection matches only when the two ports declare the **same schema
   name and version** — sharing a structural shape is not enough (§11).
 
-The effective authority ceiling is the intersection of the circuit's declared
-ceiling with every member chip's ceiling (§12); :func:`validate_circuit`
-computes and returns it.
+Effective authority is computed **per effect-requesting chip**, not min-ed over
+the whole circuit (§12). The circuit ceiling is a *cap*: a chip whose own maximum
+sits below it stays low, and a no-effect chip's ``observe`` ceiling does **not**
+constrain a downstream chip. :func:`validate_circuit` returns a
+:class:`CircuitAuthority` carrying the circuit ceiling plus a per-chip
+effective-ceiling map (each chip's own maximum intersected with the circuit cap).
+A chip whose *declared* effect class exceeds the circuit ceiling makes the circuit
+unsatisfiable and is a hard error.
 """
 
 from __future__ import annotations
@@ -119,6 +124,23 @@ class Circuit:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class CircuitAuthority:
+    """The authority result of validating a circuit (§12).
+
+    ``circuit_ceiling`` is the circuit's declared cap. ``per_chip`` maps each
+    :attr:`ChipRef.ref` to that chip's *static* effective ceiling — its own
+    declared maximum intersected with the circuit ceiling. It is deliberately
+    **not** a single min over every member: a no-effect chip's low ceiling never
+    caps a downstream effect-requesting chip. At enforcement time a host further
+    intersects a chip's entry with binding ∩ host ∩ approval (see
+    :func:`chip.binding.compute_effective_authority`).
+    """
+
+    circuit_ceiling: EffectClass
+    per_chip: dict[str, EffectClass] = field(default_factory=dict)
+
+
 def _output_schema(manifest: ChipManifest, port_name: str, ref: str) -> str:
     for port in manifest.contract.outputs:
         if port.name == port_name:
@@ -133,15 +155,19 @@ def _input_schema(manifest: ChipManifest, port_name: str, ref: str) -> str:
     raise CircuitError(f"chip {ref!r} declares no input port named {port_name!r}")
 
 
-def validate_circuit(circuit: Circuit, manifests: dict[str, ChipManifest]) -> EffectClass:
-    """Validate a circuit against the §11 rules; return its effective ceiling.
+def validate_circuit(circuit: Circuit, manifests: dict[str, ChipManifest]) -> CircuitAuthority:
+    """Validate a circuit against the §11 rules; return its :class:`CircuitAuthority`.
 
     ``manifests`` maps each :attr:`ChipRef.ref` to the resolved
     :class:`~chip.manifest.ChipManifest`. Raises :class:`CircuitError` on any
     structural violation (too many chips, missing manifest, feedback/self edge,
-    schema-name mismatch). On success returns the effective authority ceiling —
-    the intersection of the circuit's declared ceiling with every member chip's
-    maximum (§12).
+    schema-name mismatch) *or* when a chip declares an effect whose class exceeds
+    the circuit ceiling (the circuit would be unsatisfiable — §12).
+
+    On success returns a :class:`CircuitAuthority`: the circuit's declared ceiling
+    plus a per-chip effective-ceiling map (each chip's own maximum ∩ the circuit
+    ceiling). Authority is per effect-requesting chip; a sibling chip's ceiling
+    does not constrain it.
     """
     if not circuit.chips:
         raise CircuitError(f"circuit {circuit.id!r} contains no chips")
@@ -209,9 +235,24 @@ def validate_circuit(circuit: Circuit, manifests: dict[str, ChipManifest]) -> Ef
                 " schema name and version must match (§11)"
             )
 
-    # Effective ceiling = intersection of circuit + every member chip maximum.
-    member_ceilings = [m.authority.maximum_effect_class for m in manifests.values()]
-    effective = effective_authority(circuit.authority_ceiling, *member_ceilings)
-    if effective is None:  # pragma: no cover - all inputs are non-None here
-        raise CircuitError(f"circuit {circuit.id!r}: authority failed closed")
-    return effective
+    # Per-chip effective ceiling = that chip's own maximum ∩ the circuit ceiling.
+    # We do NOT min over every member: a no-effect chip's low ceiling must not cap
+    # a downstream effect-requesting chip (§12).
+    per_chip: dict[str, EffectClass] = {}
+    for cref in circuit.chips:
+        manifest = manifests[cref.ref]
+        chip_max = manifest.authority.maximum_effect_class
+        # A chip whose DECLARED effect exceeds the circuit ceiling is unsatisfiable.
+        for eff in manifest.contract.effects:
+            if eff.effect_class > circuit.authority_ceiling:
+                raise CircuitError(
+                    f"circuit {circuit.id!r}: chip {cref.ref!r} declares effect "
+                    f"{eff.name!r} of class '{eff.effect_class.label}' exceeding the "
+                    f"circuit ceiling '{circuit.authority_ceiling.label}'; the circuit "
+                    "is unsatisfiable (§12)"
+                )
+        effective = effective_authority(chip_max, circuit.authority_ceiling)
+        if effective is None:  # pragma: no cover - both inputs are non-None here
+            raise CircuitError(f"circuit {circuit.id!r}: authority failed closed for {cref.ref!r}")
+        per_chip[cref.ref] = effective
+    return CircuitAuthority(circuit_ceiling=circuit.authority_ceiling, per_chip=per_chip)

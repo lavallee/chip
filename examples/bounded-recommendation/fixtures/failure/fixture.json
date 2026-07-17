@@ -1,0 +1,22 @@
+{
+  "kind": "failure",
+  "description": "A malformed finding with no evidence at all. The chip fails closed with an EnvelopeError; no effect is composed.",
+  "priorState": { "issued": [] },
+  "config": { "targetOwner": "owner://research-ideas", "runId": "run-brec-fail-1" },
+  "input": {
+    "kind": "finding",
+    "assessment": { "material": true, "confidence": 0.8, "rationale": "Asserts materiality with no supporting evidence." },
+    "evidence": [],
+    "lineage": {
+      "feed": "https://agency.example.gov/transport-safety/rss",
+      "entry_id": "entry-2026-07-16-noevidence",
+      "content_digest": "sha256:f66b1c2d3e4f5061728394a5b6c7d8e9f0a1b2c3d4e5f6071829304a5b6c7d8e"
+    },
+    "producedBy": { "chip": "https://github.com/lavallee/chip/tree/main/examples/publication-attention", "run": "run-fail-x" }
+  },
+  "cannedGatewayResult": null,
+  "expected": {
+    "errorClass": "EnvelopeError",
+    "effectCount": 0
+  }
+}

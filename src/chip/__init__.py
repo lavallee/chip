@@ -73,6 +73,7 @@ _LAZY: dict[str, tuple[str, str]] = {
     "EvaluationLedger": ("chip.evaluation", "EvaluationLedger"),
     # circuit
     "Circuit": ("chip.circuit", "Circuit"),
+    "CircuitAuthority": ("chip.circuit", "CircuitAuthority"),
     "validate_circuit": ("chip.circuit", "validate_circuit"),
     # binding
     "Binding": ("chip.binding", "Binding"),

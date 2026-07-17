@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lavallee/chip/tree/main/examples/publication-attention/schemas/state.json@1",
+  "title": "Publication attention state (v1)",
+  "description": "Installation-scoped, single-flight attention state (spec 9): a monotonic lineage cursor and the set of seen content-digest lineage keys.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cursor", "seen"],
+  "properties": {
+    "cursor": {
+      "description": "Monotonic attention cursor; null before the first accepted signal.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["value", "lineage"],
+          "properties": {
+            "value": { "type": "string", "description": "ISO-8601 published_at of the last accepted signal." },
+            "lineage": { "type": "string", "description": "Cursor lineage id, preserved across migration." }
+          }
+        }
+      ]
+    },
+    "seen": {
+      "type": "array",
+      "description": "Seen content-digest lineage keys. Dedupe is by content digest, so the same content on a different feed entry id is still a duplicate.",
+      "items": { "type": "string" }
+    }
+  }
+}

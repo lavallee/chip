@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lavallee/chip/tree/main/examples/publication-attention/schemas/assessment-result.json@1",
+  "title": "Assessment result (v1)",
+  "description": "The structured gateway result. The host validates it before it may influence state or effects (spec 10.2). `insufficient_evidence` is the abstain path.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["material", "confidence", "insufficient_evidence"],
+  "properties": {
+    "material": { "type": "boolean" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "rationale": { "type": "string" },
+    "evidence_spans": {
+      "type": "array",
+      "description": "Quotes the model relied on. Each is source-derived text and will be re-wrapped by the chip as a taint-preserving span.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["quote", "why_material"],
+        "properties": {
+          "quote": { "type": "string" },
+          "why_material": { "type": "string" }
+        }
+      }
+    },
+    "insufficient_evidence": {
+      "type": "boolean",
+      "description": "When true the model abstains; the chip emits an abstention rather than a finding."
+    }
+  }
+}

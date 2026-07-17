@@ -1,0 +1,113 @@
+{
+  "apiVersion": "chip.spec/v0alpha1",
+  "kind": "Chip",
+
+  "metadata": {
+    "id": "https://github.com/lavallee/chip/tree/main/examples/publication-attention",
+    "alias": "examples.publication-attention",
+    "version": "0.1.0",
+    "title": "Publication attention",
+    "description": "For every new in-scope publication signal, produce one evidence-linked materiality assessment or a quiet result, with no effect requests.",
+    "license": "Apache-2.0",
+    "source": {
+      "repository": "https://github.com/lavallee/chip",
+      "revision": "main",
+      "path": "examples/publication-attention"
+    },
+    "artifact": {
+      "digest": "sha256:pubattn0alpha1000000000000000000000000000000000000000000000000",
+      "provenance": "provenance.json",
+      "sbom": "sbom.spdx.json"
+    }
+  },
+
+  "contract": {
+    "promise": "For every new in-scope publication signal, produce one evidence-linked materiality assessment or a quiet result, with no effect requests.",
+    "inputs": [
+      {
+        "name": "publication",
+        "schema": "schemas/publication-signal.json@1",
+        "delivery": "at-least-once"
+      }
+    ],
+    "outputs": [
+      { "name": "finding", "schema": "schemas/materiality-finding.json@1" },
+      { "name": "quiet", "schema": "schemas/quiet-run.json@1" }
+    ],
+    "effects": []
+  },
+
+  "state": {
+    "schema": "schemas/state.json@1",
+    "scope": "installation",
+    "retention": "P365D",
+    "cursor": "required",
+    "concurrency": "single-flight",
+    "migration": "migrations/state-v1.json"
+  },
+
+  "implementation": {
+    "runtime": "python",
+    "entrypoint": "chip_impl:run",
+    "stagesAreContractual": false,
+    "stages": [
+      { "id": "normalize", "kind": "code", "determinism": "deterministic" },
+      {
+        "id": "assess",
+        "kind": "gateway",
+        "determinism": "probabilistic",
+        "requestSchema": "schemas/assessment-request.json@1",
+        "resultSchema": "schemas/assessment-result.json@1",
+        "profile": "materiality-mid"
+      },
+      { "id": "validate", "kind": "policy", "determinism": "deterministic" }
+    ]
+  },
+
+  "dependencies": {
+    "capabilities": [
+      "receipts.v1",
+      "policy-effects.v1",
+      "state.single-flight.v1",
+      "gateway-attempt.v1"
+    ],
+    "adapters": ["publication.fetch"],
+    "secrets": []
+  },
+
+  "authority": {
+    "maximumEffectClass": "observe",
+    "prohibited": ["commission", "publish", "merge"],
+    "approval": { "mode": "most-restrictive-wins" }
+  },
+
+  "limits": {
+    "timeout": "PT5M",
+    "maxActivationsPerHour": 4,
+    "modelBudgetUsd": 0.5,
+    "retry": { "scope": "pre-effect-stage", "attempts": 2, "backoff": "exponential" }
+  },
+
+  "security": {
+    "inputTrust": "hostile",
+    "networkAllowlist": [],
+    "filesystem": "none",
+    "promptInjectionPolicy": "evidence-only"
+  },
+
+  "evaluation": {
+    "fixtures": "fixtures/",
+    "heldoutSuite": "evals/publication-attention-heldout-v1.json",
+    "results": []
+  },
+
+  "compatibility": {
+    "chipSpec": ">=0.1.0 <0.2.0",
+    "requiredHostCapabilities": [
+      "receipts.v1",
+      "policy-effects.v1",
+      "state.single-flight.v1",
+      "gateway-attempt.v1"
+    ]
+  }
+}

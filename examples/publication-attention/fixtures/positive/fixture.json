@@ -1,0 +1,37 @@
+{
+  "kind": "positive",
+  "description": "A new in-scope safety report; canned gateway result finds it material.",
+  "priorState": { "cursor": null, "seen": [] },
+  "config": { "beat": "transportation-safety", "scope": "public agency recall and inspection reports", "runId": "run-pos-1" },
+  "input": {
+    "id": "sig-2026-07-15-001",
+    "lineage": {
+      "feed": "https://agency.example.gov/transport-safety/rss",
+      "entry_id": "entry-2026-07-15-001",
+      "content_digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
+    },
+    "published_at": "2026-07-15T14:00:00Z",
+    "title": "Agency orders recall of Model X brake actuators after inspection findings",
+    "url": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
+    "body": "The National Transportation Safety Agency has ordered a recall of Model X brake actuators manufactured between 2024 and 2025 after field inspections found premature wear that could reduce braking performance. Operators are directed to schedule inspections within 30 days.",
+    "source": { "name": "National Transportation Safety Agency", "authority_context": "public-safety-agency" }
+  },
+  "cannedGatewayResult": {
+    "material": true,
+    "confidence": 0.86,
+    "rationale": "A recall order affecting braking performance across a two-year production range is materially relevant to the configured transportation-safety beat.",
+    "evidence_spans": [
+      {
+        "quote": "ordered a recall of Model X brake actuators manufactured between 2024 and 2025 after field inspections found premature wear that could reduce braking performance",
+        "why_material": "Directly describes a safety-critical recall with a defined scope."
+      }
+    ],
+    "insufficient_evidence": false
+  },
+  "expected": {
+    "responseKind": "finding",
+    "noGatewayCall": false,
+    "noEffect": true,
+    "evidenceTaintPreserved": true
+  }
+}

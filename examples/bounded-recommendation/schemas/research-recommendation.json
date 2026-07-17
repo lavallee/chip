@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation/schemas/research-recommendation.json@1",
+  "title": "Research recommendation (v1)",
+  "description": "The effect payload for a rate-limited research recommendation (class 'recommend', human-gated). Evidence quotes are carried as taint-preserving spans; taint is never laundered.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["recommendation", "rationale", "evidence", "lineage"],
+  "properties": {
+    "recommendation": { "type": "string", "description": "The bounded proposed follow-up research action." },
+    "rationale": { "type": "string", "description": "Chip-authored justification referencing the upstream finding." },
+    "evidence": {
+      "type": "array",
+      "description": "Passed through from the finding; each item keeps its taint-preserving quoted_span.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["claim", "quoted_span", "source_url", "digest"],
+        "properties": {
+          "claim": { "type": "string" },
+          "quoted_span": {
+            "type": "object",
+            "required": ["value", "taint"],
+            "properties": {
+              "value": {},
+              "taint": {
+                "type": "object",
+                "required": ["trust", "source"],
+                "properties": {
+                  "trust": { "type": "string" },
+                  "source": { "type": "string" },
+                  "via": { "type": "array" }
+                }
+              }
+            }
+          },
+          "source_url": { "type": "string" },
+          "digest": { "type": "string" }
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["content_digest"],
+      "properties": {
+        "feed": { "type": "string" },
+        "entry_id": { "type": "string" },
+        "content_digest": { "type": "string" }
+      }
+    }
+  }
+}

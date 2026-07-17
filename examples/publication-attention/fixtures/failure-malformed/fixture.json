@@ -1,0 +1,19 @@
+{
+  "kind": "failure",
+  "description": "Malformed signal missing lineage. Normalization fails closed with an EnvelopeError before any gateway call or state mutation.",
+  "priorState": { "cursor": null, "seen": [] },
+  "config": { "beat": "transportation-safety", "runId": "run-fail-1" },
+  "input": {
+    "id": "sig-broken-001",
+    "published_at": "2026-07-16T10:00:00Z",
+    "title": "Untitled",
+    "url": "https://agency.example.gov/transport-safety/reports/broken",
+    "body": "A report body with no lineage block at all.",
+    "source": { "name": "National Transportation Safety Agency", "authority_context": "public-safety-agency" }
+  },
+  "cannedGatewayResult": null,
+  "expected": {
+    "errorClass": "EnvelopeError",
+    "noGatewayCall": true
+  }
+}

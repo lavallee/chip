@@ -126,6 +126,55 @@ class EvaluationLedger:
             "minimumsMet": entry.minimums_met,
         }
 
+    def entries(self) -> list[dict[str, Any]]:
+        """Every recorded entry as a list of plain dicts (each carries its ``key``).
+
+        The tuple ``key`` is the content-addressed :meth:`EvaluatedTuple.key`; a
+        host that persists these can rebuild an equivalent ledger via
+        :meth:`from_dict`, since all lookups (:meth:`is_evaluated`,
+        :meth:`authority_cap_for`) are keyed on that hash alone.
+        """
+        return [
+            {
+                "key": key,
+                "receiptRef": entry.receipt_ref,
+                "metrics": dict(entry.metrics),
+                "minimumsMet": entry.minimums_met,
+            }
+            for key, entry in self._entries.items()
+        ]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the whole ledger to a plain, JSON-round-trippable dict."""
+        return {"version": "cet-ledger-1", "entries": self.entries()}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> EvaluationLedger:
+        """Rebuild a ledger from :meth:`to_dict` output (or an ``entries`` list).
+
+        Faithful for the ledger's purpose: it restores each ``tuple.key`` →
+        (receipt, metrics, minimumsMet) mapping so evaluated/observe-cap decisions
+        replay identically. Raises :class:`EvaluationError` on a malformed entry.
+        """
+        ledger = cls()
+        if not isinstance(data, dict):
+            raise EvaluationError("EvaluationLedger.from_dict: expected a dict")
+        for item in data.get("entries", []):
+            if not isinstance(item, dict) or "key" not in item:
+                raise EvaluationError("EvaluationLedger.from_dict: entry missing 'key'")
+            key = item["key"]
+            receipt_ref = item.get("receiptRef", "")
+            if not receipt_ref or not str(receipt_ref).strip():
+                raise EvaluationError(
+                    f"EvaluationLedger.from_dict: entry {key!r} missing receiptRef"
+                )
+            ledger._entries[key] = _LedgerEntry(
+                receipt_ref=receipt_ref,
+                metrics=dict(item.get("metrics", {})),
+                minimums_met=bool(item.get("minimumsMet", False)),
+            )
+        return ledger
+
 
 # The ceiling an evaluated tuple is permitted to reach. The spec caps v1 chips at
 # `recommend`/synthesize by authority declaration; evaluation does not itself

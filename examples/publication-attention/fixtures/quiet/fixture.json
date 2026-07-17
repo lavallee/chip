@@ -1,0 +1,29 @@
+{
+  "kind": "quiet",
+  "description": "The signal's content digest is already in seen state; quiet, no gateway call.",
+  "priorState": {
+    "cursor": { "value": "2026-07-15T14:00:00Z", "lineage": "https://agency.example.gov/transport-safety/rss" },
+    "seen": ["sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"]
+  },
+  "config": { "beat": "transportation-safety", "runId": "run-quiet-1" },
+  "input": {
+    "id": "sig-2026-07-15-001-again",
+    "lineage": {
+      "feed": "https://agency.example.gov/transport-safety/rss",
+      "entry_id": "entry-2026-07-15-001",
+      "content_digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
+    },
+    "published_at": "2026-07-15T14:00:00Z",
+    "title": "Agency orders recall of Model X brake actuators after inspection findings",
+    "url": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
+    "body": "The National Transportation Safety Agency has ordered a recall of Model X brake actuators.",
+    "source": { "name": "National Transportation Safety Agency", "authority_context": "public-safety-agency" }
+  },
+  "cannedGatewayResult": null,
+  "expected": {
+    "responseKind": "quiet",
+    "reason": "duplicate-content",
+    "noGatewayCall": true,
+    "noEffect": true
+  }
+}

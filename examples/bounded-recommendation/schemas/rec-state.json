@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation/schemas/rec-state.json@1",
+  "title": "Bounded recommendation state (v1)",
+  "description": "Installation-scoped, single-flight state (spec 9): the set of lineage content digests already issued a recommendation, for per-lineage rate accounting.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["issued"],
+  "properties": {
+    "issued": {
+      "type": "array",
+      "description": "Content-digest lineage keys that have already had a recommendation issued.",
+      "items": { "type": "string" }
+    }
+  }
+}

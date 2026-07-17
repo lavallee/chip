@@ -32,13 +32,17 @@ class EffectClass(IntEnum):
     Backed by :class:`enum.IntEnum` so the natural ``<``/``min`` operators give
     the lattice ordering directly. The integer values are an implementation
     detail; the wire form is the lowercase :pyattr:`label` (e.g. ``"observe"``).
+
+    Numbering is deliberately **1-based**: the lowest rung (``OBSERVE``) must be
+    truthy so a ``if ceiling:`` guard cannot silently treat an observe-only
+    ceiling as "no authority". Only ``None`` means no authority (fail closed).
     """
 
-    OBSERVE = 0
-    SYNTHESIZE = 1
-    EXPERIMENT = 2
-    DRAFT = 3
-    PROMOTE = 4
+    OBSERVE = 1
+    SYNTHESIZE = 2
+    EXPERIMENT = 3
+    DRAFT = 4
+    PROMOTE = 5
 
     @property
     def label(self) -> str:

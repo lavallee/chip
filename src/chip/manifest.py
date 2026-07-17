@@ -505,13 +505,40 @@ def load_manifest(data: dict[str, Any]) -> ChipManifest:
     return ChipManifest.from_dict(data)
 
 
+def split_schema_ref(ref: str) -> tuple[str, str | None]:
+    """Split a schema reference ``path/name.json@N`` into ``(file_path, version)``.
+
+    A schema reference names both a file *and* a schema version: the on-disk file
+    is ``path/name.json``; the ``@N`` suffix pins the schema version. The full ref
+    string (including ``@N``) is what circuit port compatibility matches on — two
+    ports are compatible only when their **whole** refs are equal (same file AND
+    same version, §11). This helper resolves only the file half, so a package can
+    ship ``schemas/name.json`` while its manifest declares ``schemas/name.json@1``.
+
+    A ref with no ``@`` returns ``(ref, None)``. The ``@`` must follow the ``.json``
+    extension; an ``@`` earlier in the path is treated as part of the file name.
+    """
+    marker = ".json@"
+    idx = ref.rfind(marker)
+    if idx == -1:
+        return ref, None
+    file_path = ref[: idx + len(".json")]
+    version = ref[idx + len(marker):]
+    if not version:
+        raise ManifestError(f"schema ref {ref!r} has an empty version after '@'")
+    return file_path, version
+
+
 def load_chip_package(package_dir: str | Path) -> tuple[ChipManifest, dict[str, Path]]:
     """Load ``chip.json`` from a package directory and resolve its schema paths.
 
     Returns ``(manifest, resolved_schemas)`` where ``resolved_schemas`` maps each
-    declared schema reference to its absolute :class:`~pathlib.Path` under the
-    package. A reference that does not resolve to an existing file raises
-    :class:`ManifestError` — a package must ship the schemas it declares (§7).
+    declared schema reference — the **full** ``path/name.json@N`` string — to the
+    absolute :class:`~pathlib.Path` of its on-disk file ``path/name.json``. The
+    version suffix pins the schema version for port compatibility but is not part
+    of the file name (see :func:`split_schema_ref`). A reference whose file does
+    not exist raises :class:`ManifestError` — a package must ship the schemas it
+    declares (§7).
     """
     root = Path(package_dir)
     manifest_path = root / "chip.json"
@@ -524,10 +551,13 @@ def load_chip_package(package_dir: str | Path) -> tuple[ChipManifest, dict[str, 
     manifest = load_manifest(data)
     resolved: dict[str, Path] = {}
     for ref in manifest.schema_refs():
-        schema_path = (root / ref).resolve()
+        file_path, _version = split_schema_ref(ref)
+        schema_path = (root / file_path).resolve()
         if not schema_path.is_file():
             raise ManifestError(
                 f"declared schema {ref!r} not found at {schema_path} (package must ship its schemas)"
             )
+        # Key on the FULL ref (with @version) so callers matching port refs keep
+        # the version; the value is the resolved versionless file.
         resolved[ref] = schema_path
     return manifest, resolved

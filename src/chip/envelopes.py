@@ -45,17 +45,24 @@ class TrustClass(StrEnum):
 
 
 class ResponseKind(StrEnum):
-    """The mutually-distinguished response varieties of §8.2."""
+    """The four terminal run-outcome kinds of §8.2.
 
-    OBSERVATION = "observation"
-    CLAIM = "claim"
-    EVIDENCE = "evidence"
-    RECOMMENDATION = "recommendation"
-    UNCERTAINTY = "uncertainty"
-    ABSTENTION = "abstention"
+    ``kind`` names *how the run ended*, not what the envelope carries. The §8.2
+    distinctions observation/claim/evidence/recommendation/uncertainty/expiry are
+    envelope **fields** (see :class:`Response`), not kinds. Every run terminates as
+    exactly one of:
+
+    * ``finding`` — a claim/assessment (optionally with evidence, a recommendation,
+      and uncertainty);
+    * ``quiet`` — a first-class no-finding success;
+    * ``abstain`` — the chip declined to claim (e.g. insufficient evidence); or
+    * ``needs_input`` — a typed pending human decision (see :class:`NeedsInput`).
+    """
+
+    FINDING = "finding"
     QUIET = "quiet"
+    ABSTAIN = "abstain"
     NEEDS_INPUT = "needs_input"
-    EXPIRY = "expiry"
 
 
 def _require(d: dict[str, Any], key: str, ctx: str) -> Any:
@@ -72,6 +79,11 @@ class Signal:
     detect duplicate and successor signals. ``trust`` defaults to ``hostile``
     because retrieved content is hostile data that MUST NOT be interpreted as
     instructions.
+
+    ``content`` is the optional payload the chip actually assesses — typically a
+    taint-marked ``{value, taint}`` marker (see :mod:`chip.taint`) — as distinct
+    from the lineage/digest *metadata* above. For large payloads a host MAY omit
+    ``content`` and carry a ``custody_ref`` to where the raw content lives (§8.1).
     """
 
     id: str
@@ -87,6 +99,7 @@ class Signal:
     trust: TrustClass = TrustClass.HOSTILE
     prior_signal: str | None = None
     custody_ref: str | None = None
+    content: Any | None = None  # taint-marked payload under assessment (§8.1)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Signal:
@@ -105,6 +118,7 @@ class Signal:
             trust=TrustClass(data.get("trust", "hostile")),
             prior_signal=data.get("priorSignal"),
             custody_ref=data.get("custodyRef"),
+            content=data.get("content"),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -125,6 +139,8 @@ class Signal:
             out["priorSignal"] = self.prior_signal
         if self.custody_ref is not None:
             out["custodyRef"] = self.custody_ref
+        if self.content is not None:
+            out["content"] = self.content
         return out
 
 
@@ -169,9 +185,12 @@ class NeedsInput:
 class Response:
     """An output envelope (§8.2).
 
-    ``kind`` selects among the distinguished varieties (observation, claim,
-    evidence, recommendation, uncertainty, abstention, quiet, needs_input,
-    expiry). Fields derived from hostile input should be taint-marked (see
+    ``kind`` is one of the four terminal run outcomes (``finding`` | ``quiet`` |
+    ``abstain`` | ``needs_input``, see :class:`ResponseKind`). The §8.2
+    distinctions are carried as *fields*, not kinds: ``body`` (observation/claim),
+    ``evidence`` (cited spans), ``recommendation`` (proposed response),
+    ``uncertainty`` (confidence/counterevidence), and ``expiry`` (freshness).
+    Fields derived from hostile input should be taint-marked (see
     :mod:`chip.taint`); ``needs_input`` carries a typed :class:`NeedsInput`.
     """
 
@@ -180,6 +199,7 @@ class Response:
     produced_by_run: str
     body: dict[str, Any] = field(default_factory=dict)
     evidence: list[dict[str, Any]] = field(default_factory=list)
+    recommendation: dict[str, Any] | None = None
     uncertainty: dict[str, Any] | None = None
     expiry: str | None = None
     needs_input: NeedsInput | None = None
@@ -196,6 +216,7 @@ class Response:
             produced_by_run=_require(data, "producedByRun", ctx),
             body=data.get("body", {}),
             evidence=list(data.get("evidence", [])),
+            recommendation=data.get("recommendation"),
             uncertainty=data.get("uncertainty"),
             expiry=data.get("expiry"),
             needs_input=NeedsInput.from_dict(needs) if needs else None,
@@ -210,6 +231,8 @@ class Response:
             "body": self.body,
             "evidence": self.evidence,
         }
+        if self.recommendation is not None:
+            out["recommendation"] = self.recommendation
         if self.uncertainty is not None:
             out["uncertainty"] = self.uncertainty
         if self.expiry is not None:

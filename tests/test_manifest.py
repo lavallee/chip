@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from chip.errors import ManifestError
 from chip.manifest import (
     ChipManifest,
+    load_chip_package,
     load_manifest,
     parse_semver,
     satisfies_range,
+    split_schema_ref,
 )
 
 
@@ -86,6 +90,39 @@ def test_bad_api_version_rejected(publication_attention_manifest):
     publication_attention_manifest["apiVersion"] = "chip.spec/v9"
     with pytest.raises(ManifestError):
         load_manifest(publication_attention_manifest)
+
+
+# ---- schema ref split (file vs. version) ----
+
+
+def test_split_schema_ref():
+    assert split_schema_ref("schemas/x.json@1") == ("schemas/x.json", "1")
+    assert split_schema_ref("schemas/x.json@12") == ("schemas/x.json", "12")
+    # no @ -> versionless
+    assert split_schema_ref("schemas/x.json") == ("schemas/x.json", None)
+    # empty version rejected
+    with pytest.raises(ManifestError):
+        split_schema_ref("schemas/x.json@")
+
+
+def test_load_chip_package_resolves_versionless_file(publication_attention_manifest, tmp_path):
+    # Manifest refs carry @1; the on-disk file is versionless. The resolved map
+    # keys on the FULL ref but points at the versionless file.
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    (pkg / "chip.json").write_text(json.dumps(publication_attention_manifest), encoding="utf-8")
+    m = load_manifest(publication_attention_manifest)
+    for ref in m.schema_refs():
+        file_path, version = split_schema_ref(ref)
+        assert version == "1"  # every example ref is pinned @1
+        p = pkg / file_path
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps({"$id": ref, "type": "object"}), encoding="utf-8")
+    _, resolved = load_chip_package(pkg)
+    for ref in m.schema_refs():
+        assert ref in resolved  # keyed on full @-versioned ref
+        assert resolved[ref].name.endswith(".json")  # versionless file on disk
+        assert "@" not in resolved[ref].name
 
 
 # ---- semver helpers ----

@@ -1,0 +1,41 @@
+{
+  "kind": "positive",
+  "description": "A well-formed, taint-preserving materiality finding yields exactly one effect request with a stable key.",
+  "priorState": { "issued": [] },
+  "config": { "targetOwner": "owner://research-ideas", "promiseId": "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation", "runId": "run-brec-pos-1" },
+  "input": {
+    "kind": "finding",
+    "assessment": { "material": true, "confidence": 0.86, "rationale": "A recall order affecting braking performance is material to the beat." },
+    "evidence": [
+      {
+        "claim": "Directly describes a safety-critical recall with a defined scope.",
+        "quoted_span": {
+          "value": "ordered a recall of Model X brake actuators manufactured between 2024 and 2025 after field inspections found premature wear that could reduce braking performance",
+          "taint": {
+            "trust": "hostile",
+            "source": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
+            "via": ["https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx", "assess"]
+          }
+        },
+        "source_url": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
+        "digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
+      }
+    ],
+    "lineage": {
+      "feed": "https://agency.example.gov/transport-safety/rss",
+      "entry_id": "entry-2026-07-15-001",
+      "content_digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
+    },
+    "uncertainty": { "confidence": 0.86 },
+    "counterevidence": [],
+    "expiry": "P30D",
+    "producedBy": { "chip": "https://github.com/lavallee/chip/tree/main/examples/publication-attention", "run": "run-pos-1" }
+  },
+  "cannedGatewayResult": null,
+  "expected": {
+    "responseKind": "finding",
+    "effectCount": 1,
+    "stableEffectKey": true,
+    "evidenceTaintPreserved": true
+  }
+}

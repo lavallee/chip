@@ -19,6 +19,14 @@ def test_effect_class_total_order():
     assert min(EffectClass.PROMOTE, EffectClass.OBSERVE) is EffectClass.OBSERVE
 
 
+def test_observe_is_truthy():
+    # OBSERVE is the lowest rung but must be truthy: effect classes are 1-based
+    # so a `if ceiling:` guard cannot mistake an observe-only ceiling for "no
+    # authority". Only None means no authority (fail closed).
+    assert bool(EffectClass.OBSERVE) is True
+    assert all(bool(ec) is True for ec in EffectClass)
+
+
 def test_parse_labels_and_recommend_alias():
     assert EffectClass.parse("observe") is EffectClass.OBSERVE
     assert EffectClass.parse("promote") is EffectClass.PROMOTE

@@ -1,0 +1,37 @@
+{
+  "kind": "quiet",
+  "description": "Idempotent re-run of a finding already issued (single-flight retry). Quiet, zero effects.",
+  "priorState": { "issued": ["sha256:d44f0e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6"] },
+  "config": { "targetOwner": "owner://research-ideas", "runId": "run-brec-quiet-1" },
+  "input": {
+    "kind": "finding",
+    "assessment": { "material": true, "confidence": 0.79, "rationale": "Bridge inspection anomaly is material." },
+    "evidence": [
+      {
+        "claim": "Anomaly flagged for follow-up.",
+        "quoted_span": {
+          "value": "flagged an anomaly in the load-bearing joints requiring follow-up inspection",
+          "taint": {
+            "trust": "hostile",
+            "source": "https://agency.example.gov/transport-safety/reports/2026-07-14-bridge",
+            "via": ["https://agency.example.gov/transport-safety/reports/2026-07-14-bridge", "assess"]
+          }
+        },
+        "source_url": "https://agency.example.gov/transport-safety/reports/2026-07-14-bridge",
+        "digest": "sha256:d44f0e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6"
+      }
+    ],
+    "lineage": {
+      "feed": "https://agency.example.gov/transport-safety/rss",
+      "entry_id": "entry-2026-07-14-030",
+      "content_digest": "sha256:d44f0e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6"
+    },
+    "producedBy": { "chip": "https://github.com/lavallee/chip/tree/main/examples/publication-attention", "run": "run-pos-3" }
+  },
+  "cannedGatewayResult": null,
+  "expected": {
+    "responseKind": "quiet",
+    "reason": "already-issued",
+    "effectCount": 0
+  }
+}

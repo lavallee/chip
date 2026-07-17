@@ -1,0 +1,37 @@
+{
+  "kind": "duplicate",
+  "description": "At-least-once redelivery of a finding whose lineage was already issued a recommendation. Quiet, zero effects.",
+  "priorState": { "issued": ["sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"] },
+  "config": { "targetOwner": "owner://research-ideas", "runId": "run-brec-dup-1" },
+  "input": {
+    "kind": "finding",
+    "assessment": { "material": true, "confidence": 0.86, "rationale": "Re-assessment of the same recall report." },
+    "evidence": [
+      {
+        "claim": "Same safety-critical recall.",
+        "quoted_span": {
+          "value": "ordered a recall of Model X brake actuators manufactured between 2024 and 2025",
+          "taint": {
+            "trust": "hostile",
+            "source": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
+            "via": ["https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx", "assess"]
+          }
+        },
+        "source_url": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
+        "digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
+      }
+    ],
+    "lineage": {
+      "feed": "https://agency.example.gov/transport-safety/rss",
+      "entry_id": "entry-2026-07-15-001",
+      "content_digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
+    },
+    "producedBy": { "chip": "https://github.com/lavallee/chip/tree/main/examples/publication-attention", "run": "run-pos-2" }
+  },
+  "cannedGatewayResult": null,
+  "expected": {
+    "responseKind": "quiet",
+    "reason": "already-issued",
+    "effectCount": 0
+  }
+}

@@ -1,11 +1,12 @@
 # Chips and circuits
 
 Status: `candidate specification`  
-Version: `0.3.0`  
+Version: `0.4.0`  
 Date: `2026-07-16`  
 Implementation status: `v1 experiment in progress (Fab host)`  
-History: v0.2.0 followed an independent adversarial model review; v0.3.0 is the
-first published edition, relocated to this repository.
+History: v0.2.0 followed an independent adversarial model review; v0.3.0 was the
+first published edition, relocated to this repository; v0.4.0 folds in
+implementation-informed clarifications from the first host (Fab) and first pilot.
 
 ## Abstract
 
@@ -322,7 +323,7 @@ tooling may layer on later; it is not required by this specification.)
 
   "implementation": {
     "runtime": "python",
-    "entrypoint": "chip:run",
+    "entrypoint": "chip_impl:run",
     "stagesAreContractual": false,
     "stages": [
       { "id": "normalize", "kind": "code", "determinism": "deterministic" },
@@ -417,6 +418,9 @@ Every input MUST carry or resolve to:
 - content or evidence digest;
 - lineage and deduplication key;
 - trust classification;
+- content or custody reference: the payload under assessment, carrying its trust
+  classification as field-level taint (inline for small payloads, a custody
+  reference when the raw content lives elsewhere);
 - optional prior-signal relationship; and
 - custody reference when raw content lives elsewhere.
 
@@ -435,6 +439,11 @@ Every output MUST distinguish:
 - abstention, quiet result, or needs-input state;
 - expiry/freshness; and
 - the chip/circuit/run coordinates that produced it.
+
+These distinctions are envelope **fields**. The response's terminal *kind* — how
+the run ended — is exactly one of four: `finding`, `quiet`, `abstain`, or
+`needs_input`; observation, claim, evidence, recommendation, uncertainty, and
+expiry ride as fields on a `finding`, not as separate kinds.
 
 A mention MUST NOT be promoted to evidence merely because a chip observed it.
 Source authority remains claim-specific.
@@ -481,6 +490,14 @@ mutable state representation and MUST survive state migration. Host-side
 deduplication is necessary but insufficient: the target owning system is the
 final deduplication authority because retries, migrations, or a future host
 change can bypass one host's local state.
+
+The four key inputs come from canonical, host-resolved sources so that the host
+and the implementation compute the *same* key: source lineage comes from the
+signal's lineage key; effect type from the effect declaration; and the remaining
+two — target owner and operational-promise identity — are binding/manifest
+resolved and injected by the host into the activation config as `effect_target`
+and `promise_id`. An implementation MUST read them from there rather than
+inventing its own, and the host recomputes and verifies the key it receives.
 
 A recommendation entering an agent-consumed surface may be dispatched
 automatically only when the adapter and consumer have a tested taint-aware
@@ -661,6 +678,12 @@ chip maximum
   ∩ host policy
   ∩ current human approval
 ```
+
+The chip maximum in the intersection is the maximum of the chip requesting the
+effect; a sibling chip's ceiling does not constrain it. A circuit ceiling is a
+cap applied per requesting chip, not a floor min-ed over all members — an
+observe-only sensing chip therefore never lowers a downstream chip's effective
+authority.
 
 Any missing authority fails closed.
 

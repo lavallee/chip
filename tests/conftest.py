@@ -63,7 +63,7 @@ def _publication_attention_manifest() -> dict:
         },
         "implementation": {
             "runtime": "python",
-            "entrypoint": "chip:run",
+            "entrypoint": "chip_impl:run",
             "stagesAreContractual": False,
             "stages": [
                 {"id": "normalize", "kind": "code", "determinism": "deterministic"},
@@ -155,7 +155,7 @@ def _bounded_recommendation_manifest() -> dict:
         },
         "implementation": {
             "runtime": "python",
-            "entrypoint": "chip:run",
+            "entrypoint": "chip_impl:run",
             "stagesAreContractual": False,
             "stages": [{"id": "emit", "kind": "code", "determinism": "deterministic"}],
         },

@@ -13,13 +13,15 @@ from chip.authority import EffectClass
 from chip.circuit import Circuit, validate_circuit
 from chip.envelopes import EffectRequest, Signal, derive_effect_key
 from chip.fixtures import validate_fixture_coverage
-from chip.manifest import load_chip_package, load_manifest
+from chip.manifest import load_chip_package, load_manifest, split_schema_ref
 from chip.receipts import Coordinates, build_judgment_receipt, validate_receipt
 
 
 def _write_schemas(pkg, schema_refs):
+    # The manifest ref carries an @version; the on-disk file is versionless.
     for ref in schema_refs:
-        path = pkg / ref
+        file_path, _version = split_schema_ref(ref)
+        path = pkg / file_path
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"$id": ref, "type": "object"}), encoding="utf-8")
 
@@ -77,7 +79,8 @@ def test_circuit_and_effect_and_receipt_cohere(
         "recommend": load_manifest(bounded_recommendation_manifest),
     }
     circuit = Circuit.from_dict(linear_circuit_dict)
-    ceiling = validate_circuit(circuit, manifests)
+    auth = validate_circuit(circuit, manifests)
+    ceiling = auth.circuit_ceiling
     assert ceiling is EffectClass.SYNTHESIZE
 
     # A signal comes in; a bounded effect request is produced with a stable key.

@@ -67,3 +67,31 @@ def test_record_requires_receipt_ref():
     ledger = EvaluationLedger()
     with pytest.raises(EvaluationError):
         ledger.record(_tuple(), "", {}, minimums_met=True)
+
+
+def test_ledger_persistence_round_trip():
+    ledger = EvaluationLedger()
+    evaluated = _tuple(profile="materiality-mid@1")
+    ledger.record(evaluated, "eval-receipt:1", {"precision": 0.82}, minimums_met=True)
+    not_ready = _tuple(profile="materiality-mid@2")
+    ledger.record(not_ready, "eval-receipt:2", {}, minimums_met=False)
+
+    entries = ledger.entries()
+    assert len(entries) == 2
+    assert all("key" in e for e in entries)
+
+    # Rebuild from to_dict and confirm decisions replay identically.
+    rebuilt = EvaluationLedger.from_dict(ledger.to_dict())
+    assert rebuilt.is_evaluated(evaluated)
+    assert rebuilt.authority_cap_for(evaluated) is EffectClass.PROMOTE
+    assert not rebuilt.is_evaluated(not_ready)
+    assert rebuilt.authority_cap_for(not_ready) is EffectClass.OBSERVE
+    # And the serialized form is stable across a round trip.
+    assert rebuilt.to_dict() == ledger.to_dict()
+
+
+def test_ledger_from_dict_rejects_bad_entry():
+    with pytest.raises(EvaluationError):
+        EvaluationLedger.from_dict({"entries": [{"metrics": {}}]})  # missing key
+    with pytest.raises(EvaluationError):
+        EvaluationLedger.from_dict({"entries": [{"key": "cet1-x", "receiptRef": ""}]})

@@ -22,8 +22,13 @@ def manifests(publication_attention_manifest, bounded_recommendation_manifest):
 
 def test_valid_circuit(linear_circuit_dict, manifests):
     circuit = Circuit.from_dict(linear_circuit_dict)
-    ceiling = validate_circuit(circuit, manifests)
-    assert ceiling is EffectClass.SYNTHESIZE  # intersection of recommend ceilings
+    auth = validate_circuit(circuit, manifests)
+    assert auth.circuit_ceiling is EffectClass.SYNTHESIZE  # "recommend" rung
+    # Per-chip effective ceiling = each chip's own max ∩ the circuit ceiling.
+    assert auth.per_chip == {
+        "attention": EffectClass.SYNTHESIZE,
+        "recommend": EffectClass.SYNTHESIZE,
+    }
 
 
 def test_four_chips_rejected(linear_circuit_dict, manifests):
@@ -80,12 +85,30 @@ def test_self_reference_rejected(linear_circuit_dict, manifests):
     assert "self-referential" in str(exc.value)
 
 
-def test_effective_ceiling_is_intersection(linear_circuit_dict, manifests, publication_attention_manifest):
-    # Lower one member's ceiling to observe; the circuit effective drops to observe.
+def test_no_effect_upstream_does_not_cap_downstream(
+    linear_circuit_dict, manifests, publication_attention_manifest
+):
+    # Lower the UPSTREAM sensing chip to an observe-only ceiling (no effects).
+    # Its low ceiling must NOT cap the downstream effect-requesting chip: that is
+    # the core per-chip-authority fix (§12).
     lowered = copy.deepcopy(publication_attention_manifest)
     lowered["authority"]["maximumEffectClass"] = "observe"
-    lowered["contract"]["effects"][0]["class"] = "observe"
+    lowered["contract"]["effects"] = []  # a genuine no-effect sensing chip
     m = dict(manifests)
     m["attention"] = load_manifest(lowered)
     circuit = Circuit.from_dict(linear_circuit_dict)
-    assert validate_circuit(circuit, m) is EffectClass.OBSERVE
+    auth = validate_circuit(circuit, m)
+    # Circuit ceiling unchanged; downstream stays at synthesize, upstream capped low.
+    assert auth.circuit_ceiling is EffectClass.SYNTHESIZE
+    assert auth.per_chip["attention"] is EffectClass.OBSERVE
+    assert auth.per_chip["recommend"] is EffectClass.SYNTHESIZE
+
+
+def test_declared_effect_exceeding_circuit_ceiling_rejected(linear_circuit_dict, manifests):
+    # A chip declaring an effect class above the circuit ceiling is unsatisfiable.
+    d = copy.deepcopy(linear_circuit_dict)
+    d["authorityCeiling"] = "observe"  # below the chips' declared recommend effects
+    circuit = Circuit.from_dict(d)
+    with pytest.raises(CircuitError) as exc:
+        validate_circuit(circuit, manifests)
+    assert "unsatisfiable" in str(exc.value)

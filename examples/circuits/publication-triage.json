@@ -1,0 +1,73 @@
+{
+  "id": "circuit:publication-triage",
+  "version": "0.1.0",
+  "title": "Publication triage",
+  "description": "Two-chip linear pilot: attention (sense + judge materiality) -> bounded recommendation (rate-limited, human-gated effect request). Reference circuit for chip-spec 20.1.",
+
+  "activationSignalType": "publication",
+  "authorityCeiling": "recommend",
+
+  "chips": [
+    {
+      "ref": "attention",
+      "chip": "examples.publication-attention",
+      "contractVersion": "0.1.0",
+      "implementation": "sha256:pubattn0alpha1000000000000000000000000000000000000000000000000"
+    },
+    {
+      "ref": "recommend",
+      "chip": "examples.bounded-recommendation",
+      "contractVersion": "0.1.0",
+      "implementation": "sha256:boundedrec0alpha10000000000000000000000000000000000000000000000"
+    }
+  ],
+
+  "connections": [
+    {
+      "fromChip": "attention",
+      "fromPort": "finding",
+      "toChip": "recommend",
+      "toPort": "finding"
+    },
+    { "fromChip": "attention", "fromPort": "quiet", "toChip": "terminal" },
+    { "fromChip": "recommend", "fromPort": "recommendation-issued", "toChip": "terminal" },
+    { "fromChip": "recommend", "fromPort": "quiet", "toChip": "terminal" }
+  ],
+
+  "sharedBudgets": {
+    "modelBudgetUsd": 0.5,
+    "maxEffectsPerDay": 2
+  },
+
+  "errorPolicy": {
+    "mode": "fail-closed",
+    "onStageError": "abort-run-no-effect",
+    "onInvalidGatewayResult": "fail-closed"
+  },
+
+  "humanDecisionPoints": [
+    "recommend-research: the recommendation effect request requires human approval before dispatch (defaultApproval: human)"
+  ],
+
+  "stateOwnership": {
+    "attention": "installation-scoped cursor + seen content digests",
+    "recommend": "installation-scoped issued content digests",
+    "boundary": "each chip owns its own single-flight state; no shared mutable state crosses the port boundary"
+  },
+
+  "quietOutcomes": [
+    "attention: duplicate-content",
+    "attention: not-after-cursor",
+    "recommend: already-issued"
+  ],
+
+  "terminalOutcomes": [
+    "recommendation-issued (pending human approval)",
+    "attention: abstain (insufficient-evidence)",
+    "recommend: abstain (evidence-taint-lost-refuse-to-launder)"
+  ],
+
+  "compatibility": {
+    "chipSpec": ">=0.1.0 <0.2.0"
+  }
+}

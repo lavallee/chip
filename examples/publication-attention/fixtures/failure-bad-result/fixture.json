@@ -1,0 +1,30 @@
+{
+  "kind": "failure",
+  "description": "The gateway returns a result that violates the result contract (confidence out of range, non-boolean material). The chip fails closed.",
+  "priorState": { "cursor": null, "seen": [] },
+  "config": { "beat": "transportation-safety", "runId": "run-fail-2" },
+  "input": {
+    "id": "sig-2026-07-16-090",
+    "lineage": {
+      "feed": "https://agency.example.gov/transport-safety/rss",
+      "entry_id": "entry-2026-07-16-090",
+      "content_digest": "sha256:c33ea1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e"
+    },
+    "published_at": "2026-07-16T11:00:00Z",
+    "title": "Inspection summary for regional bridges",
+    "url": "https://agency.example.gov/transport-safety/reports/2026-07-16-bridges",
+    "body": "The agency published a routine inspection summary for regional bridges.",
+    "source": { "name": "National Transportation Safety Agency", "authority_context": "public-safety-agency" }
+  },
+  "cannedGatewayResult": {
+    "material": "yes",
+    "confidence": 1.7,
+    "rationale": "malformed",
+    "insufficient_evidence": false
+  },
+  "expected": {
+    "errorClass": "EnvelopeError",
+    "noGatewayCall": false,
+    "noEffect": true
+  }
+}

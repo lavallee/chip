@@ -1,0 +1,98 @@
+{
+  "apiVersion": "chip.spec/v0alpha1",
+  "kind": "Chip",
+
+  "metadata": {
+    "id": "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation",
+    "alias": "examples.bounded-recommendation",
+    "version": "0.1.0",
+    "title": "Bounded recommendation",
+    "description": "Given a materiality finding, emit at most one rate-limited, evidence-linked research recommendation effect request per unique lineage, or a quiet result.",
+    "license": "Apache-2.0",
+    "source": {
+      "repository": "https://github.com/lavallee/chip",
+      "revision": "main",
+      "path": "examples/bounded-recommendation"
+    },
+    "artifact": {
+      "digest": "sha256:boundedrec0alpha10000000000000000000000000000000000000000000000",
+      "provenance": "provenance.json",
+      "sbom": "sbom.spdx.json"
+    }
+  },
+
+  "contract": {
+    "promise": "Given a materiality finding, emit at most one rate-limited, evidence-linked research recommendation effect request per unique lineage, or a quiet result.",
+    "inputs": [
+      { "name": "finding", "schema": "schemas/materiality-finding.json@1", "delivery": "at-least-once" }
+    ],
+    "outputs": [
+      { "name": "recommendation-issued", "schema": "schemas/recommendation-issued.json@1" },
+      { "name": "quiet", "schema": "schemas/quiet-run.json@1" }
+    ],
+    "effects": [
+      {
+        "name": "recommend-research",
+        "schema": "schemas/research-recommendation.json@1",
+        "class": "recommend",
+        "defaultApproval": "human"
+      }
+    ]
+  },
+
+  "state": {
+    "schema": "schemas/rec-state.json@1",
+    "scope": "installation",
+    "retention": "P365D",
+    "cursor": "none",
+    "concurrency": "single-flight",
+    "migration": "migrations/rec-state-v1.json"
+  },
+
+  "implementation": {
+    "runtime": "python",
+    "entrypoint": "chip_impl:run",
+    "stagesAreContractual": false,
+    "stages": [
+      { "id": "gate", "kind": "policy", "determinism": "deterministic" },
+      { "id": "compose", "kind": "code", "determinism": "deterministic" }
+    ]
+  },
+
+  "dependencies": {
+    "capabilities": ["receipts.v1", "policy-effects.v1", "state.single-flight.v1"],
+    "adapters": ["recommendation.emit"],
+    "secrets": []
+  },
+
+  "authority": {
+    "maximumEffectClass": "recommend",
+    "prohibited": ["commission", "publish", "merge"],
+    "approval": { "mode": "most-restrictive-wins" }
+  },
+
+  "limits": {
+    "timeout": "PT2M",
+    "maxEffectsPerDay": 2,
+    "cooldown": "PT6H",
+    "retry": { "scope": "pre-effect-stage", "attempts": 2, "backoff": "exponential" }
+  },
+
+  "security": {
+    "inputTrust": "untrusted",
+    "networkAllowlist": [],
+    "filesystem": "none",
+    "promptInjectionPolicy": "evidence-only"
+  },
+
+  "evaluation": {
+    "fixtures": "fixtures/",
+    "heldoutSuite": "evals/bounded-recommendation-heldout-v1.json",
+    "results": []
+  },
+
+  "compatibility": {
+    "chipSpec": ">=0.1.0 <0.2.0",
+    "requiredHostCapabilities": ["receipts.v1", "policy-effects.v1", "state.single-flight.v1"]
+  }
+}
