@@ -90,3 +90,23 @@ def test_effective_authority_missing_approval_fails_closed():
         None,  # no human approval
     )
     assert got is None
+
+
+def test_chip_parameters_round_trip(binding_dict):
+    binding_dict["chipParameters"] = {
+        "site.nav-check": {"linkPolicy": [{"selectorText": "← All", "expectedHref": "/x/"}]}
+    }
+    b = Binding.from_dict(binding_dict)
+    assert b.chip_parameters["site.nav-check"]["linkPolicy"][0]["expectedHref"] == "/x/"
+
+
+def test_chip_parameters_must_map_alias_to_object(binding_dict):
+    binding_dict["chipParameters"] = {"site.nav-check": ["not-an-object"]}
+    with pytest.raises(BindingError, match="chipParameters"):
+        Binding.from_dict(binding_dict)
+
+
+def test_chip_parameters_reject_secret_literals(binding_dict):
+    binding_dict["chipParameters"] = {"site.nav-check": {"apiKey": "API_KEY=sk1234567890ABCDEFGH"}}
+    with pytest.raises(BindingError, match="secret"):
+        Binding.from_dict(binding_dict)

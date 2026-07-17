@@ -1,13 +1,14 @@
 # Chips and circuits
 
 Status: `candidate specification`  
-Version: `0.4.1`  
-Date: `2026-07-16`  
+Version: `0.4.2`  
+Date: `2026-07-17`  
 Implementation status: `v1 experiment in progress (Fab host)`  
 History: v0.2.0 followed an independent adversarial model review; v0.3.0 was the
 first published edition, relocated to this repository; v0.4.0 folds in
 implementation-informed clarifications from the first host (Fab) and first pilot;
-v0.4.1 adds host-review clarifications from the first host implementation.
+v0.4.1 adds host-review clarifications from the first host implementation;
+v0.4.2 adds binding chipParameters.
 
 ## Abstract
 
@@ -668,6 +669,9 @@ A binding resolves:
 
 - chip implementations and host adapters;
 - source endpoints and custody references;
+- per-chip configuration parameters (`chipParameters`, keyed by chip alias),
+  merged into the activation `config` beneath host-injected keys and never
+  carrying secret literals;
 - secret **references**, never secret values;
 - model profiles through Somm;
 - project/owner identity through the owning system;

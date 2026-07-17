@@ -6,6 +6,14 @@ implementation.
 
 Schema identifier: `chip.spec/v0alpha1`.
 
+## 0.4.2 — 2026-07-17
+
+Additive: bindings may carry per-chip configuration under `chipParameters`
+(keyed by chip alias). Hosts merge these into the activation `config` beneath
+host-injected keys; secret literals are rejected. Surfaced by the first
+third-party-style chip (a site nav-link check) needing a declarative policy
+without baking it into the package.
+
 ## 0.4.1 — 2026-07-16
 
 Host-review clarifications from the first host implementation. These sharpen the

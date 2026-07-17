@@ -89,6 +89,10 @@ class Binding:
     effect_destinations: dict[str, str] = field(default_factory=dict)
     budgets: dict[str, Any] = field(default_factory=dict)
     cadence: dict[str, Any] = field(default_factory=dict)  # descriptive only in v1
+    # Per-chip configuration the host merges into the activation ``config``
+    # (keyed by chip alias). Host-injected keys (promise_id, effect_target, ...)
+    # always win over these; values must not carry secret literals (§12).
+    chip_parameters: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Binding:
@@ -101,6 +105,18 @@ class Binding:
         ceiling = data.get("authorityCeiling")
         if not ceiling:
             raise BindingError("binding: missing required field 'authorityCeiling'")
+        chip_parameters = data.get("chipParameters", {})
+        if not isinstance(chip_parameters, dict) or any(
+            not isinstance(v, dict) for v in chip_parameters.values()
+        ):
+            raise BindingError("binding: 'chipParameters' must map chip alias -> parameter object")
+        for alias, params in chip_parameters.items():
+            for key, value in params.items():
+                if isinstance(value, str) and _looks_like_secret_value(value):
+                    raise BindingError(
+                        f"chipParameters[{alias!r}][{key!r}] looks like a literal secret value; "
+                        "bindings carry references only (§12)"
+                    )
         return cls(
             chip_implementations=dict(data.get("chipImplementations", {})),
             host_adapters=dict(data.get("hostAdapters", {})),
@@ -114,6 +130,7 @@ class Binding:
             effect_destinations=dict(data.get("effectDestinations", {})),
             budgets=data.get("budgets", {}),
             cadence=data.get("cadence", {}),
+            chip_parameters={a: dict(p) for a, p in chip_parameters.items()},
         )
 
 

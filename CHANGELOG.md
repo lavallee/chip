@@ -4,6 +4,12 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Added
+
+- Bindings may carry per-chip configuration under `chipParameters` (spec
+  0.4.2): merged into the activation `config` beneath host-injected keys;
+  secret literals rejected.
+
 ## [0.1.0] — 2026-07-17
 
 ### Added
