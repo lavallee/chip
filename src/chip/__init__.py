@@ -109,6 +109,11 @@ _LAZY: dict[str, tuple[str, str]] = {
     "Fixture": ("chip.fixtures", "Fixture"),
     "load_fixtures": ("chip.fixtures", "load_fixtures"),
     "validate_fixture_coverage": ("chip.fixtures", "validate_fixture_coverage"),
+    # datasheet (a derived comprehension surface — projection, never authority)
+    "Datasheet": ("chip.datasheet", "Datasheet"),
+    "build_datasheet": ("chip.datasheet", "build_datasheet"),
+    "render_markdown": ("chip.datasheet", "render_markdown"),
+    "render_html": ("chip.datasheet", "render_html"),
     # optional payload validation (guarded jsonschema)
     "validate_payload": ("chip.payloads", "validate_payload"),
     "jsonschema_available": ("chip.payloads", "jsonschema_available"),

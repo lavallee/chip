@@ -40,6 +40,20 @@ additive; the schema identifier is unchanged (`chip.spec/v0alpha1`).
 - Docs: `docs/candidates.md` (candidate-capture convention) and
   `docs/skill-to-chip.md` (the falsifiability-triage skill→chip conversion
   method).
+- **Chip datasheet** (`chip.datasheet`): a derived, never-authored comprehension
+  surface for one chip. `build_datasheet(package_dir, *, evaluations,
+  lifecycle_events, rollup, current_generation)` is a pure read-join over the
+  manifest and fixtures plus plain-dict host telemetry (no host imports); it
+  emits identity/promise, ports with a fixture-drawn example payload each, a
+  probabilistic-stage table with the README residue echoed verbatim,
+  authority/limits as "what this chip can never do", evaluation status with an
+  `authoredAgainst` drift banner, live stats (with a "no telemetry yet"
+  fallback), lineage, and a projection-manifest block (source snapshot,
+  generator, coverage×freshness confidence, invalidation trigger). Two
+  renderers: `render_markdown` (terminal-friendly) and `render_html`
+  (self-contained artoo-kit page, no external requests). Presence is never
+  evidence — correctness rides the held-out eval status and drift flag, and
+  absent inputs are named in the coverage statement.
 
 ### Changed
 
