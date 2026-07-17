@@ -13,13 +13,30 @@ prose skill
   → thin skill (typed outputs, recognition + interpretation only)
   → hybrid chip (deterministic envelope, one bounded judgment stage)
   → deterministic chip (all judgments rule/code based)
-  → plain code (retired from the model entirely)
+  → thin skill + CLI (judgment and envelope both gone; a versioned
+      deterministic tool plus a skill that only teaches discovery/invocation)
+  → plain code (no skill at all; invoked by system wiring, not by an agent
+      reading prose)
 ```
 
-Each rung evicts more from the model. The framing is not "wrap the model in
-code" but **progressively evict everything from the model except what earns its
-place**. What earns its place is the irreducible probabilistic essence — the
-judgment a fixture cannot decide.
+The early rungs evict **judgment** from the model; the late rungs evict
+**governance** (as it stops being needed) and **teaching** (as models stop
+needing it). The framing is not "wrap the model in code" but **progressively
+evict everything from the model except what earns its place**. What earns its
+place is the irreducible probabilistic essence — the judgment a fixture cannot
+decide.
+
+Two paths reach the late rungs, and the §4.1 admission rule is the switch:
+
+- A behavior with **no standing observation relationship and no cross-run
+  state** never enters the chip rungs at all — it distills straight from prose
+  to *thin skill + CLI*. Enforcement-shaped behavior usually wants to be a
+  tool first; that is success, not a failed decomposition.
+- A behavior that satisfies admission passes through chip-hood and may later
+  **demote** to *thin skill + CLI* when the governance envelope stops paying
+  for itself — this is a destination for the `retire` lifecycle event, not
+  just deletion: the deterministic code survives as a tool, and the chip's
+  fixtures survive as the CLI's ordinary test suite.
 
 ## The per-behavior test
 
