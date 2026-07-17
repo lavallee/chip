@@ -6,6 +6,52 @@ implementation.
 
 Schema identifier: `chip.spec/v0alpha1`.
 
+## 0.5.0 — 2026-07-17
+
+Admits the **delegation profile** of the contract alongside the original
+**attention profile**, and adds the three-layer resolution split and two
+non-contractual manifest surfaces. Additive throughout; the schema identifier is
+unchanged (still `chip.spec/v0alpha1`). Informed by a banking study of what an
+agent operating recurring build/ship loops would actually store and reuse.
+
+Added:
+
+- **Two activation profiles (§3.1, §8.1).** The contract now names its original
+  center of gravity the *attention profile* (pull-only, owner-scheduled
+  observation) and admits a second, symmetric *delegation profile*: a harness or
+  agent operating under the owning system's authority MAY invoke an installed
+  chip mid-workflow (*delegated activation*). A delegated activation is receipted
+  identically, counts against the same limits, and carries the invoking agent's
+  identity in the signal's authority context. Still no timers, webhooks, push, or
+  new authority — it is an invocation of an already-installed chip.
+- **`partitioned(<keyField>)` state (§9, §3.1).** Admitted for delegation-profile
+  map/cache-class chips: runs may overlap across distinct partition keys with
+  single-flight per key, keyed by a declared signal envelope field (e.g. one
+  repository per partition). Cursor-bearing attention chips still MUST use
+  `single-flight`. `cas` remains deferred; open question 4 is updated.
+- **Lifecycle telemetry (§13.1).** A new host-maintained, append-only record of
+  six events — `mint`, `transfer`, `split`, `merge`, `optimize`, `retire` — each
+  a fixed-shape entry. Minting SHOULD be frequency-gated; `split`/`merge`/
+  `optimize`/`retire` MUST carry the held-out `tupleKey` that gated them; a
+  `model-generation` retirement MUST reference a raw-model baseline comparison.
+- **Manifest `hints` block (§7, §7.1).** Optional, non-contractual, accretive
+  annotations keyed by surface/harness (`hints.harnesses.<name>`,
+  `hints.models.<generation>`). Every entry carries `authoredAgainst` and is
+  prunable without a version bump — hints sit outside the compatibility contract,
+  like internal stages, because they rot with model generations.
+- **`implementation.authoredAgainst` + re-derivation contract (§7.1, §10.2).** The
+  judgment-stage artifacts carry the model generation they were tuned for. On a
+  model-generation change the judgment stage SHOULD be re-derived from the
+  fixtures rather than hand-patched: the held-out suite defines the promise, the
+  internals are a build output.
+- **Environment profiles (§12.1).** A host-owned document
+  (`environment.spec/v0alpha1`) describing one environment's system shape —
+  capabilities, adapters, gateway profiles, state roots, policy overlays,
+  conventions. Bindings MAY reference a profile (`binding.environment`) instead of
+  restating host facts; binding-local values override profile values. This makes
+  the resolution three layers: portable manifest (+ hints) / binding /
+  environment profile.
+
 ## 0.4.2 — 2026-07-17
 
 Additive: bindings may carry per-chip configuration under `chipParameters`

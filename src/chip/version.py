@@ -6,5 +6,5 @@ the chip specification schema identifier the models and validators conform to
 the spec identifier.
 """
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 SPEC_VERSION = "chip.spec/v0alpha1"

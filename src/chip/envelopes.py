@@ -43,6 +43,29 @@ _RUN_MARKER_RE = re.compile(
 )
 
 
+# The declared field names (camelCase wire form) of the §8.1 signal envelope.
+# A ``partitioned(<keyField>)`` state contract's key MUST name one of these
+# (§9): a partition key is a stable signal field, not an implementation invention.
+SIGNAL_ENVELOPE_FIELDS: frozenset[str] = frozenset(
+    {
+        "id",
+        "type",
+        "schemaVersion",
+        "observedAt",
+        "receivedAt",
+        "source",
+        "authorityContext",
+        "digest",
+        "lineageKey",
+        "dedupeKey",
+        "trust",
+        "priorSignal",
+        "custodyRef",
+        "content",
+    }
+)
+
+
 class TrustClass(StrEnum):
     """Trust classification carried by a signal (§8.1). Retrieved content is hostile."""
 

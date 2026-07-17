@@ -93,6 +93,10 @@ class Binding:
     # (keyed by chip alias). Host-injected keys (promise_id, effect_target, ...)
     # always win over these; values must not carry secret literals (§12).
     chip_parameters: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Optional reference to a host-owned environment profile (§12, 0.5.0). When
+    # set, the binding MAY omit host facts the profile already states; resolve
+    # via :func:`chip.environment.resolve_binding_against_environment`.
+    environment: str | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Binding:
@@ -131,6 +135,7 @@ class Binding:
             budgets=data.get("budgets", {}),
             cadence=data.get("cadence", {}),
             chip_parameters={a: dict(p) for a, p in chip_parameters.items()},
+            environment=data.get("environment"),
         )
 
 

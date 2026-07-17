@@ -1,6 +1,6 @@
 [project]
 name = "chipspec"
-version = "0.1.0"
+version = "0.2.0"
 description = "chip — a contract for portable, versioned operational components (spec, validation, conformance kit)"
 requires-python = ">=3.12"
 license = { text = "MIT" }

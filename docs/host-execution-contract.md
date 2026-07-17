@@ -47,6 +47,26 @@ uses it for its response coordinates (`producedByRun`) — the implementation MU
 NOT invent a run id of its own, and MUST NOT feed `run_id` into
 `derive_effect_key` (the effect key excludes run identity, spec §8.3).
 
+### Activation profiles (attention vs delegation)
+
+The activation reaches the chip the same way regardless of how it was triggered
+(spec §3.1). Two profiles produce it:
+
+- **Attention profile** — an owner-side schedule or manual guarded action emits
+  the activation signal (the original v1 path).
+- **Delegation profile** — a harness or agent operating under the owning
+  system's authority invokes an already-installed chip mid-workflow. The host
+  constructs the same activation dict; the only difference the implementation can
+  observe is that `signal.authorityContext` names the invoking agent's identity.
+
+The implementation MUST NOT branch on the profile: a delegated run is receipted
+identically, metered against the same `limits.*`, and gated by the same
+effective authority (`chip ∩ circuit ∩ binding ∩ host ∩ approval`). The invoking
+identity in `authorityContext` is attribution/policy context, never a grant. A
+`partitioned(<keyField>)` chip (spec §9) is a delegation-profile shape: the host
+computes the partition from the named signal field and single-flights per key,
+letting distinct-key invocations proceed in parallel.
+
 The effect-key inputs are deliberately host-supplied: `signal.lineageKey` and the
 effect type come from the envelope and effect declaration, while `config.promise_id`
 and `config.effect_target` are binding/manifest-resolved and injected here. An

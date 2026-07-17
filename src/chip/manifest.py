@@ -18,10 +18,20 @@ Key v1 rules enforced on load:
 
 The stage kind the spec calls a "Somm stage" is named ``gateway`` here (public
 vocabulary). ``somm`` is accepted as a deprecated alias when parsing manifests.
+
+Two accretive, non-contractual surfaces arrived in spec 0.5.0:
+
+* ``implementation.authoredAgainst`` — the model generation the judgment-stage
+  artifacts were tuned for (§7.1/§10.2); and
+* a top-level ``hints`` block — harness/model-keyed annotations that sit
+  explicitly OUTSIDE the compatibility contract (like stages) and may be pruned
+  without a version bump (§7). :func:`prune_hints` drops entries older than a
+  given model generation.
 """
 
 from __future__ import annotations
 
+import copy
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -276,6 +286,11 @@ class Implementation:
     entrypoint: str
     stages_are_contractual: bool
     stages: tuple[Stage, ...]
+    # The model generation the judgment-stage artifacts were tuned for, e.g.
+    # "provider/model-2026-05" (§7.1/§10.2). Optional; a build output, not a
+    # contract term — on a model-generation change the judgment stage SHOULD be
+    # re-derived from the fixtures rather than hand-patched.
+    authored_against: str | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Implementation:
@@ -294,11 +309,17 @@ class Implementation:
                     f"{ctx}: gateway stage {gs.id!r} MUST declare requestSchema and resultSchema"
                     " (§10.2)"
                 )
+        authored_against = data.get("authoredAgainst")
+        if authored_against is not None and (
+            not isinstance(authored_against, str) or not authored_against.strip()
+        ):
+            raise ManifestError(f"{ctx}.authoredAgainst must be a non-empty model-generation string")
         return cls(
             runtime=_require(data, "runtime", ctx),
             entrypoint=_require(data, "entrypoint", ctx),
             stages_are_contractual=bool(data.get("stagesAreContractual", False)),
             stages=stages,
+            authored_against=authored_against,
         )
 
     @property
@@ -431,6 +452,101 @@ class Compatibility:
 
 
 @dataclass(frozen=True, slots=True)
+class Hints:
+    """Non-contractual, accretive annotations keyed by surface/harness (§7, 0.5.0).
+
+    Hints sit **outside** the compatibility contract — exactly like internal
+    stages. They carry harness-specific phrasings and per-model-generation notes
+    (``hints.harnesses.<name>.phrasing``, ``hints.models.<generation>.notes``)
+    that rot as model generations advance, and they may be pruned without a
+    version bump (see :func:`prune_hints`). Shape is validated *loosely*: a
+    mapping of category -> (name -> entry), where each **entry** is an object
+    carrying a non-empty ``authoredAgainst`` model-generation string. Anything
+    else about an entry is free-form.
+
+    ``categories`` preserves the raw nested dict so a host can read arbitrary
+    keys; :meth:`entries` iterates ``(category, name, entry)`` triples.
+    """
+
+    categories: dict[str, dict[str, dict[str, Any]]]
+
+    @classmethod
+    def from_dict(cls, data: Any) -> Hints:
+        ctx = "hints"
+        if not isinstance(data, dict):
+            raise ManifestError(f"{ctx} must be an object of category -> (name -> entry)")
+        categories: dict[str, dict[str, dict[str, Any]]] = {}
+        for category, names in data.items():
+            if not isinstance(names, dict):
+                raise ManifestError(f"{ctx}.{category} must be an object of name -> entry")
+            entries: dict[str, dict[str, Any]] = {}
+            for name, entry in names.items():
+                if not isinstance(entry, dict):
+                    raise ManifestError(f"{ctx}.{category}.{name} must be an entry object")
+                authored = entry.get("authoredAgainst")
+                if not isinstance(authored, str) or not authored.strip():
+                    raise ManifestError(
+                        f"{ctx}.{category}.{name} must carry a non-empty 'authoredAgainst' "
+                        "model-generation string (every hint entry is generation-tagged, §7)"
+                    )
+                entries[name] = dict(entry)
+            categories[category] = entries
+        return cls(categories=categories)
+
+    def entries(self) -> list[tuple[str, str, dict[str, Any]]]:
+        """Every hint entry as an ordered ``(category, name, entry)`` triple."""
+        return [
+            (category, name, entry)
+            for category, names in self.categories.items()
+            for name, entry in names.items()
+        ]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {c: {n: dict(e) for n, e in names.items()} for c, names in self.categories.items()}
+
+
+def prune_hints(manifest_dict: dict[str, Any], older_than_generation: str) -> dict[str, Any]:
+    """Return a copy of ``manifest_dict`` with stale hint entries removed (§7, 0.5.0).
+
+    A hint entry is dropped when its ``authoredAgainst`` model generation sorts
+    strictly *before* ``older_than_generation``. Model-generation strings are
+    compared lexically (like cursor values in :mod:`chip.state`), so they should
+    be written to sort chronologically — e.g. ``"provider/model-2026-05"``.
+    Pruning a hint is explicitly **not** a version bump: hints are outside the
+    compatibility contract.
+
+    The input dict is not mutated. Categories left empty after pruning are
+    dropped, and a manifest with no ``hints`` is returned unchanged.
+    """
+    if not isinstance(older_than_generation, str) or not older_than_generation.strip():
+        raise ManifestError("prune_hints: older_than_generation must be a non-empty string")
+    result = copy.deepcopy(manifest_dict)
+    hints = result.get("hints")
+    if not isinstance(hints, dict):
+        return result
+    pruned: dict[str, Any] = {}
+    for category, names in hints.items():
+        if not isinstance(names, dict):
+            continue
+        kept = {
+            name: entry
+            for name, entry in names.items()
+            if not (
+                isinstance(entry, dict)
+                and isinstance(entry.get("authoredAgainst"), str)
+                and entry["authoredAgainst"] < older_than_generation
+            )
+        }
+        if kept:
+            pruned[category] = kept
+    if pruned:
+        result["hints"] = pruned
+    else:
+        result.pop("hints", None)
+    return result
+
+
+@dataclass(frozen=True, slots=True)
 class ChipManifest:
     """A full chip manifest (§7.1)."""
 
@@ -446,6 +562,7 @@ class ChipManifest:
     security: Security
     evaluation: EvaluationDecl
     compatibility: Compatibility
+    hints: Hints | None = None
     raw: dict[str, Any] = field(default_factory=dict, compare=False)
 
     @property
@@ -468,6 +585,16 @@ class ChipManifest:
         except StateError as exc:
             # Surface state-contract violations as a manifest-level error.
             raise ManifestError(str(exc)) from exc
+        # A partitioned(keyField) chip's key MUST name a signal envelope field (§9).
+        if state is not None and state.partition_key is not None:
+            from chip.envelopes import SIGNAL_ENVELOPE_FIELDS
+
+            if state.partition_key not in SIGNAL_ENVELOPE_FIELDS:
+                allowed = ", ".join(sorted(SIGNAL_ENVELOPE_FIELDS))
+                raise ManifestError(
+                    f"state concurrency partition key {state.partition_key!r} is not a declared "
+                    f"signal field (§8.1/§9); expected one of: {allowed}"
+                )
         contract = Contract.from_dict(_require(data, "contract", "manifest"))
         authority = Authority.from_dict(_require(data, "authority", "manifest"))
         # Every declared effect must sit at or below the authority ceiling.
@@ -490,6 +617,7 @@ class ChipManifest:
             security=Security.from_dict(data.get("security", {})),
             evaluation=EvaluationDecl.from_dict(data.get("evaluation", {})),
             compatibility=Compatibility.from_dict(_require(data, "compatibility", "manifest")),
+            hints=Hints.from_dict(data["hints"]) if data.get("hints") is not None else None,
             raw=data,
         )
 

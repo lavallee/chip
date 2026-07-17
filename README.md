@@ -30,6 +30,16 @@ receipts. A chip that needs LLM-backed judgment reaches it through a
 holding its own credentials. The **owning system** is whatever product
 or team the host and its circuits ultimately serve.
 
+A chip activates in one of two ways. In the **attention profile** an
+owner-side schedule emits a signal and the chip pays attention. In the
+**delegation profile** (spec 0.5.0) a harness or agent operating under
+the owning system's authority invokes an already-installed chip
+mid-workflow — a *delegated activation*. Either way the run is receipted
+identically, metered against the same limits, and gated by the same
+authority; a delegated run simply carries the invoking agent's identity
+in its authority context. There are still no timers, webhooks, or push
+delivery — both profiles are pull/invoke only.
+
 This repository is the contract itself: the spec, a validation
 library, and a conformance kit. It is **not a runtime** — it has zero
 runtime dependencies. fab is the reference host implementation (being
@@ -64,6 +74,7 @@ contract under active evolution. See
 | `spec/` | The chip spec — the normative contract text |
 | `src/chip/` | The `chip` package: validation and conformance helpers |
 | `examples/` | Example chips exercising the contract |
+| `docs/` | Host execution contract, candidate-ledger and skill→chip conventions |
 | `tests/` | The conformance test suite |
 
 ## Design principles

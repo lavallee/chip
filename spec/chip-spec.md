@@ -1,14 +1,18 @@
 # Chips and circuits
 
 Status: `candidate specification`  
-Version: `0.4.2`  
+Version: `0.5.0`  
 Date: `2026-07-17`  
 Implementation status: `v1 experiment in progress (Fab host)`  
 History: v0.2.0 followed an independent adversarial model review; v0.3.0 was the
 first published edition, relocated to this repository; v0.4.0 folds in
 implementation-informed clarifications from the first host (Fab) and first pilot;
 v0.4.1 adds host-review clarifications from the first host implementation;
-v0.4.2 adds binding chipParameters.
+v0.4.2 adds binding chipParameters; v0.5.0 admits the **delegation profile** of
+the contract (agent-invoked activation, partitioned state, lifecycle telemetry)
+alongside the original **attention profile**, adds non-contractual manifest
+hints and an `authoredAgainst` model-generation stamp, and introduces host-owned
+environment profiles as a third resolution layer between manifest and binding.
 
 ## Abstract
 
@@ -120,15 +124,17 @@ Version 1 is not:
 Only the following surface is normative for the first experiment:
 
 - one host: Fab, in a disposable credential-free sandbox;
-- manual or pull-only activation by an owning-system schedule outside the
-  circuit;
+- two activation profiles (see below): the **attention profile** — pull-only
+  activation by an owning-system schedule outside the circuit — and the
+  **delegation profile** — agent-invoked activation mid-workflow;
 - one read-only source adapter and, if authorized, one taint-aware
   owning-system idea adapter;
 - a chip contract containing promise, typed ports, effect declarations, state
   schema, authority ceiling, limits, and evaluated model/harness tuples;
 - deterministic and hybrid implementations, with at most one Somm stage (a
   judgment stage executed through an LLM gateway; reference: Somm);
-- installation-scoped, single-flight state held by Fab for the experiment;
+- installation-scoped state held by Fab, either `single-flight` or, for
+  delegation-profile map/cache chips, `partitioned(<keyField>)` (§9);
 - linear circuits containing at most three chips, with no nesting, feedback
   edges, push delivery, webhooks, or cross-circuit routing;
 - target-side effect deduplication and two-tier Fab receipts; and
@@ -138,6 +144,20 @@ Registry, chipset distribution, multiple hosts, general scheduling, nested or
 cyclic circuits, live project installation, and whole-suite skill decomposition
 are later hypotheses. Their sections document design intent and kill criteria;
 they are not v1 implementation scope.
+
+**Two activation profiles.** The original contract centered on *governed
+observation*: an owner-side schedule or manual guarded action emits an
+activation signal and the chip pays attention (the **attention profile**). v0.5
+admits a second, symmetric path for *governed delegation*: a harness or agent
+operating under the owning system's authority MAY invoke an installed chip
+mid-workflow (**delegated activation** — the **delegation profile**). A
+delegated activation is receipted identically to a scheduled one, counts against
+the same limits and budgets, and carries the invoking agent's identity in the
+signal's authority context (§8.1). Both profiles remain strictly pull/invoke:
+there are still no timers, webhooks, event subscriptions, background workers, or
+push delivery inside the circuit. Delegated activation is an invocation of an
+*already installed* chip; it grants no new authority and never bypasses the
+effect-class gate (§14).
 
 ## 4. Vocabulary and relationships
 
@@ -260,6 +280,18 @@ and receipts, but those stages are non-contractual. The stage decomposition is
 not part of what a circuit consumes and MUST NOT become scaffolding that a
 future model is forced to preserve.
 
+A manifest MAY carry an optional `hints` block: accretive, non-contractual
+annotations keyed by surface or harness (for example
+`hints.harnesses.<name>.phrasing` or `hints.models.<generation>.notes`). Hints
+capture harness-specific phrasings, translations, and per-model-generation notes
+that help a host or wrapper drive the chip well, without becoming part of the
+promise. Hints sit **outside** the compatibility contract, exactly like internal
+stages: they are the layer that rots as model generations advance, so every hint
+entry MUST carry an `authoredAgainst` model-generation string, and hint entries
+MAY be pruned without a version bump. A host MUST NOT let a hint change the
+observable promise, ports, state, effects, or authority; a hint that would is a
+contract term wearing the wrong label.
+
 Package identity MUST derive from an immutable source-repository coordinate and
 package path. A friendly alias is not a globally authoritative id. Any package
 crossing an organization boundary MUST carry a verifiable signature over its
@@ -327,6 +359,7 @@ tooling may layer on later; it is not required by this specification.)
     "runtime": "python",
     "entrypoint": "impl.chip_impl:run",
     "stagesAreContractual": false,
+    "authoredAgainst": "provider/model-2026-05",
     "stages": [
       { "id": "normalize", "kind": "code", "determinism": "deterministic" },
       {
@@ -400,12 +433,30 @@ tooling may layer on later; it is not required by this specification.)
       "state.single-flight.v1",
       "somm-attempt.v1"
     ]
+  },
+
+  "hints": {
+    "harnesses": {
+      "somm/structured-attempt-v1": {
+        "phrasing": "Ask for a terse rubric verdict; do not restate the evidence.",
+        "authoredAgainst": "provider/model-2026-05"
+      }
+    },
+    "models": {
+      "provider/model-2026-02": {
+        "notes": "This generation under-abstains; keep the explicit insufficient-evidence nudge.",
+        "authoredAgainst": "provider/model-2026-02"
+      }
+    }
   }
 }
 ```
 
 The syntax is illustrative. The semantics and conformance tests matter more
-than field names at this stage.
+than field names at this stage. `implementation.authoredAgainst` names the model
+generation the judgment-stage artifacts were tuned for; the `hints` block is
+non-contractual and generation-tagged (§7). Both are build metadata, not part of
+the compatibility contract.
 
 ## 8. Signal, response, and effect envelopes
 
@@ -428,6 +479,12 @@ Every input MUST carry or resolve to:
 
 Retrieved content is hostile data. It MUST NOT be interpreted as chip, circuit,
 host, or model instructions.
+
+Under the delegation profile (§3.1), a signal produced by an agent-invoked
+activation carries the invoking agent's identity in its authority context, so
+receipts attribute the delegated run to the agent that requested it. The
+invoking identity is context for attribution and policy, not a grant: it never
+raises the effective authority ceiling (§14) and the payload remains hostile.
 
 ### 8.2 Response envelope
 
@@ -537,11 +594,20 @@ The concurrency vocabulary is:
   queue behind one live lease;
 - `cas`: overlapping runs may proceed only through declared compare-and-swap
   state transitions; and
-- `partitioned(key)`: runs overlap only across distinct declared partitions.
+- `partitioned(<keyField>)`: runs may overlap across distinct partition keys,
+  with single-flight *per key* — one live lease per partition.
 
-Version 1 supports only `single-flight`. Cursor-bearing chips MUST use it. Retry
-scope is declared per stage; an effect is never retried without rechecking its
-stable idempotency key at the target.
+The admitted strategies are `single-flight` and, as of v0.5,
+`partitioned(<keyField>)`; `cas` remains a deferred hypothesis. Cursor-bearing
+**attention** chips MUST use `single-flight` — a cursor is a single monotonic
+attention position and cannot be split across partitions. `partitioned` is for
+**delegation-profile** map/cache-class chips keyed by a stable resource (for
+example, one repository per partition): concurrent delegated invocations against
+distinct keys proceed in parallel while same-key runs still single-flight. The
+`<keyField>` MUST name a declared signal envelope field (§8.1) so the host can
+compute the partition from the activation signal alone. Retry scope is declared
+per stage; an effect is never retried without rechecking its stable idempotency
+key at the target.
 
 Inputs SHOULD be assumed at-least-once unless a host proves stronger delivery.
 Effects MUST therefore be idempotent or carry an explicit compensation policy.
@@ -603,6 +669,18 @@ MUST NOT silently inherit a result from the model it previously resolved to. The
 observe cap is binding-level, not per-run: a gateway-bearing binding whose tuple
 is unevaluated is capped at `observe` for every run, including runs where the
 implementation happens not to invoke the gateway.
+
+The judgment-stage artifacts (prompts, scaffold, few-shot material) carry the
+model generation they were tuned for in `implementation.authoredAgainst` (§7.1).
+They are a perishable *build output*, not a contract term: the held-out suite
+defines the promise, the internals are what a build produced to satisfy it. On a
+model-generation change the judgment stage SHOULD therefore be **re-derived from
+the fixtures** rather than hand-patched — the same fixtures and held-out suite
+that gate a tuple are sufficient to rebuild the stage against the new generation.
+A prompt tuned for an older generation may actively hurt a newer one, so
+carrying `authoredAgainst` forward unexamined is a defect, not a courtesy. When
+the raw model has caught up to the chip on its held-out suite, retirement (§13.1)
+is the correct outcome, not another hand-patch.
 
 The host MUST validate the structured result before it can influence state or
 effects. When the request carried tainted content, the host MUST apply taint
@@ -667,6 +745,8 @@ authority.
 
 A binding resolves:
 
+- an optional host-owned environment profile reference (`environment`, §12.1),
+  supplying defaults the binding need not restate;
 - chip implementations and host adapters;
 - source endpoints and custody references;
 - per-chip configuration parameters (`chipParameters`, keyed by chip alias),
@@ -711,6 +791,32 @@ restrictive applicable gate; a permissive overlay can never weaken a chip,
 circuit, host, or owner requirement. Every effect adapter MUST submit the stable
 effect key to the target owner's deduplication boundary.
 
+### 12.1 Environment profiles (the third resolution layer)
+
+Installation-specific facts split into **three** layers, not two:
+
+1. the **portable manifest** — the chip contract plus its non-contractual,
+   generation-tagged `hints` (§7). Portable; carries no environment facts.
+2. the **binding** — installation-specific resolution: which adapters, source
+   endpoints, secret references, model profiles, owners, budgets, and authority
+   ceiling apply to *this* installation (above).
+3. the **environment profile** — a *host-owned* document describing what exists
+   in one environment: the capabilities it offers, the adapters available, the
+   gateway profiles, the state roots, the local policy overlays, and local
+   conventions. It has its own schema identifier, `environment.spec/v0alpha1`,
+   and its own id and version.
+
+The environment profile owns the system's *shape* so bindings do not each
+restate it. A binding MAY reference a profile by id (`binding.environment:
+<profile-id>`) instead of repeating host facts. A host resolves the effective
+binding by folding the profile in as defaults and letting **binding-local values
+override profile values** — the profile is the default for the environment's
+shape, the binding keeps the last word. This is the "many moving parts, not all
+under the chip" separation: the chip stays portable, the binding stays
+per-installation, and the environment profile owns what is true of the host. A
+profile is host-owned and MUST NOT carry secret values (only references), exactly
+as a binding must not (above).
+
 ## 13. Runs and receipts
 
 Every accepted activation produces a run. A rejected activation produces a
@@ -750,6 +856,41 @@ by stable id and digest. A binding MUST declare retention for each tier. Fab MAY
 compact expired attention receipts into signed aggregate counts plus a digest
 chain; judgment/effect receipts cannot be compacted while an effect, decision,
 evaluation, incident, or outcome reference remains live.
+
+### 13.1 Lifecycle telemetry
+
+Runs record what a chip *did*; lifecycle telemetry records what happened to the
+chip *itself* as it was banked and evolved. A host SHOULD maintain an
+append-only lifecycle record whose entries are exactly one of six events:
+
+| Event | Meaning |
+|---|---|
+| `mint` | A candidate crystallized into an installed chip |
+| `transfer` | An installation moved to another owner/host (with a revoke/transfer receipt, §9) |
+| `split` | One chip divided into more specific chips on evidence |
+| `merge` | Several chips consolidated into one |
+| `optimize` | The judgment stage was re-derived/tuned, promise held |
+| `retire` | The chip was withdrawn (model outgrew it, superseded, or obsolete) |
+
+Each event is a fixed-shape record: the event name, an ISO-8601 `at` timestamp,
+the acting `operator`, the `chipAlias` and `chipVersion`, the
+`implementationDigest`, an optional `tupleKey` and `receiptRef`, and a free-form
+`details` object. Three rules govern them:
+
+- **Minting SHOULD be gated on observed call frequency.** A chip is minted when a
+  path has proven routine (the candidate ledger, §21-adjacent conventions, is the
+  evidence), not eagerly — eager minting never amortizes its authoring and
+  evaluation upkeep.
+- **`split`, `merge`, `optimize`, and `retire` MUST carry the held-out `tupleKey`
+  that gated them.** These are evidence-bearing transitions; the evaluated tuple
+  (§10.2) that justified the change is part of the record, not a footnote.
+- **A `retire` whose reason is `model-generation` MUST reference a raw-model
+  baseline comparison** (in `details`): the evidence that the raw model now
+  matches or beats the chip on its held-out suite. Retiring banked judgment
+  against anything less turns banked knowledge into a silent regression.
+
+Lifecycle records are append-only and correction-by-supersession like receipts.
+They are host telemetry, not part of a chip's portable contract.
 
 ## 14. Authority, security, and supply chain
 
@@ -1179,8 +1320,9 @@ portability test with its own kill criterion.
    API, and can it avoid Fab internals?
 3. Should implementation artifacts target source packages, containers, WASM,
    or allow several profiles from the start?
-4. What evidence would justify `cas` or `partitioned(key)` after version 1's
-   installation-scoped `single-flight` state?
+4. `partitioned(<keyField>)` was admitted in v0.5 for delegation-profile
+   map/cache chips; what operating evidence would justify `cas` on top of
+   `single-flight` and `partitioned` state?
 5. Is `chipset` useful vocabulary or does it encourage overly broad bundles?
 6. What evidence could ever justify automatic patch adoption?
 7. How should registry revocation propagate to active but offline installations?

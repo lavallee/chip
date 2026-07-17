@@ -19,11 +19,14 @@ from typing import Any
 from chip.errors import (
     AuthorityError,
     BindingError,
+    CandidateError,
     ChipError,
     CircuitError,
     EnvelopeError,
+    EnvironmentProfileError,
     EvaluationError,
     FixtureError,
+    LifecycleError,
     ManifestError,
     ReceiptError,
     StateError,
@@ -39,12 +42,15 @@ _LAZY: dict[str, tuple[str, str]] = {
     "check_effect_allowed": ("chip.authority", "check_effect_allowed"),
     # manifest
     "ChipManifest": ("chip.manifest", "ChipManifest"),
+    "Hints": ("chip.manifest", "Hints"),
+    "prune_hints": ("chip.manifest", "prune_hints"),
     "load_manifest": ("chip.manifest", "load_manifest"),
     "load_chip_package": ("chip.manifest", "load_chip_package"),
     "satisfies_range": ("chip.manifest", "satisfies_range"),
     "parse_semver": ("chip.manifest", "parse_semver"),
     # envelopes
     "Signal": ("chip.envelopes", "Signal"),
+    "SIGNAL_ENVELOPE_FIELDS": ("chip.envelopes", "SIGNAL_ENVELOPE_FIELDS"),
     "Response": ("chip.envelopes", "Response"),
     "ResponseKind": ("chip.envelopes", "ResponseKind"),
     "NeedsInput": ("chip.envelopes", "NeedsInput"),
@@ -82,6 +88,23 @@ _LAZY: dict[str, tuple[str, str]] = {
     "Binding": ("chip.binding", "Binding"),
     "Installation": ("chip.binding", "Installation"),
     "compute_effective_authority": ("chip.binding", "compute_effective_authority"),
+    # environment profile
+    "EnvironmentProfile": ("chip.environment", "EnvironmentProfile"),
+    "load_environment_profile": ("chip.environment", "load_environment_profile"),
+    "resolve_binding_against_environment": (
+        "chip.environment",
+        "resolve_binding_against_environment",
+    ),
+    "ENVIRONMENT_API_VERSION": ("chip.environment", "ENVIRONMENT_API_VERSION"),
+    # lifecycle telemetry
+    "LifecycleEvent": ("chip.lifecycle", "LifecycleEvent"),
+    "validate_lifecycle_event": ("chip.lifecycle", "validate_lifecycle_event"),
+    "LIFECYCLE_EVENTS": ("chip.lifecycle", "LIFECYCLE_EVENTS"),
+    # candidate ledger
+    "Candidate": ("chip.candidates", "Candidate"),
+    "append_candidate": ("chip.candidates", "append_candidate"),
+    "load_candidates": ("chip.candidates", "load_candidates"),
+    "tally": ("chip.candidates", "tally"),
     # fixtures
     "Fixture": ("chip.fixtures", "Fixture"),
     "load_fixtures": ("chip.fixtures", "load_fixtures"),
@@ -124,6 +147,9 @@ __all__ = [
     "ReceiptError",
     "FixtureError",
     "EvaluationError",
+    "EnvironmentProfileError",
+    "LifecycleError",
+    "CandidateError",
     # lazy
     *_LAZY.keys(),
     "conformance",

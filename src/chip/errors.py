@@ -71,3 +71,21 @@ class EvaluationError(ChipError):
     """An evaluated-tuple record or ledger operation violates §10.2/§21."""
 
     code = "CHIP_EVALUATION_ERROR"
+
+
+class EnvironmentProfileError(ChipError):
+    """An environment profile is malformed or a binding/profile resolution fails (§12)."""
+
+    code = "CHIP_ENVIRONMENT_ERROR"
+
+
+class LifecycleError(ChipError):
+    """A lifecycle-telemetry event violates the mint/transfer/split/merge/optimize/retire schema."""
+
+    code = "CHIP_LIFECYCLE_ERROR"
+
+
+class CandidateError(ChipError):
+    """A candidate-ledger entry is malformed (the side-activity capture convention)."""
+
+    code = "CHIP_CANDIDATE_ERROR"
