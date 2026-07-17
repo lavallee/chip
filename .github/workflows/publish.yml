@@ -1,0 +1,43 @@
+# Publishes chipspec to PyPI via trusted publishing (OIDC — no stored
+# API tokens).
+#
+# PREREQUISITE: a trusted publisher must be configured on PyPI for this
+# package. PyPI requires *pending* publishers (used before a project
+# first exists) to be unique per (repo, workflow, environment) — the
+# environment used here is "pypi-chipspec".
+#
+# Register the pending publisher at PyPI → Account settings →
+# Publishing with: owner "lavallee", repo "chip", workflow
+# "publish.yml", environment "pypi-chipspec". The GitHub environment is
+# created automatically on first workflow run.
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi-chipspec
+      url: https://pypi.org/p/chipspec
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+      - name: Build chipspec
+        run: uv build --out-dir dist/
+      - name: Publish chipspec to PyPI
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+        with:
+          packages-dir: dist/
+          # Idempotent re-runs: a version already on PyPI is skipped, not an
+          # error — needed when a partial publish is completed by
+          # re-dispatching.
+          skip-existing: true

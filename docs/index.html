@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>chip · a contract for portable, versioned operational components</title>
+<meta name="description" content="chip is a contract for portable, versioned operational components: packaged units that observe declared signals, apply bounded judgment, and produce policy-gated responses with receipts.">
+<meta property="og:title" content="chip">
+<meta property="og:description" content="A contract for portable, versioned operational components. Chips compose into linear circuits; hosts bind and run them.">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="./">
+      <span class="mark">chip</span>
+      <span class="mark-sub">/ v0.1.0 experiment</span>
+    </a>
+    <nav>
+      <a href="#what">what</a>
+      <a href="#install">install</a>
+      <a href="#principles">principles</a>
+      <a class="gh" href="https://github.com/lavallee/chip" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <h1>A contract for portable,<br>versioned operational<br>components.</h1>
+      <p class="lede">
+        Chips are packaged units that observe declared signals, apply
+        bounded — optionally LLM-backed — judgment, and produce
+        policy-gated responses with receipts. Chips compose into linear
+        circuits; hosts bind and run them.
+      </p>
+
+<pre class="code"><span class="prompt">$</span> pip install chipspec
+<span class="prompt">$</span> python -c <span class="str">"
+import chip
+print(chip.__version__)
+"</span>
+<span class="c">→ 0.1.0</span></pre>
+
+      <div class="hero-cta">
+        <a class="btn" href="#install">Get started</a>
+        <a class="btn btn-ghost" href="https://github.com/lavallee/chip" rel="noopener">Read the spec</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="what" class="section">
+    <div class="wrap">
+      <h2>What is a chip</h2>
+      <p class="section-lede">
+        This repository is the contract itself — the spec, a validation
+        library, and a conformance kit. It is not a runtime, and it has
+        zero runtime dependencies.
+      </p>
+
+      <div class="row-list">
+        <div class="row">
+          <h3>Port</h3>
+          <p>
+            A declared input or output. A chip states up front which
+            ports it reads and which it writes — no implicit signal
+            reads, no surprise side channels.
+          </p>
+        </div>
+        <div class="row">
+          <h3>Stage</h3>
+          <p>
+            A chip running its bounded contract: observe the ports it
+            declared, apply judgment within its own scope, emit a
+            receipt. One promise per stage.
+          </p>
+        </div>
+        <div class="row">
+          <h3>Circuit</h3>
+          <p>
+            A linear sequence of stages. Each stage consumes the prior
+            stage's ports and produces its own — composition without
+            hidden fan-out.
+          </p>
+        </div>
+        <div class="row">
+          <h3>Binding</h3>
+          <p>
+            The wiring a host supplies at run time: which real data
+            fills which port, and under what policy, for one circuit.
+          </p>
+        </div>
+        <div class="row">
+          <h3>Receipt</h3>
+          <p>
+            The record of a run — including the runs where a chip
+            observed and decided not to act. No silent chips.
+          </p>
+        </div>
+        <div class="row">
+          <h3>Host and gateway</h3>
+          <p>
+            A <strong>host</strong> binds and runs circuits, enforces
+            policy, and persists receipts — fab
+            is a reference implementation. A chip that needs LLM-backed
+            judgment reaches it through a <strong>gateway</strong>
+            rather than holding its own credentials —
+            <a href="https://github.com/lavallee/somm" rel="noopener">somm</a>
+            is a reference implementation. The <strong>owning system</strong>
+            is whatever product or team the host ultimately serves.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install" class="section section-alt">
+    <div class="wrap">
+      <h2>Install</h2>
+
+<pre class="code"><span class="c"># contract + validation only:</span>
+<span class="prompt">$</span> pip install chipspec
+
+<span class="c"># + schema validation for port payloads:</span>
+<span class="prompt">$</span> pip install <span class="str">"chipspec[jsonschema]"</span></pre>
+
+      <p class="section-lede">
+        Python 3.12+. The import package is <code>chip</code> — the
+        distribution is named <code>chipspec</code> on PyPI because
+        <code>chip</code> is squatted.
+      </p>
+    </div>
+  </section>
+
+  <section id="principles" class="section">
+    <div class="wrap">
+      <h2>Design principles</h2>
+
+      <ul class="bulleted">
+        <li><strong>One promise per chip.</strong> A chip declares one
+          bounded job and does only that job.</li>
+        <li><strong>Deterministic envelope around probabilistic
+          judgment.</strong> LLM-backed decisions live inside a fixed,
+          inspectable shape — ports, policy gates, and receipts don't
+          get to be probabilistic too.</li>
+        <li><strong>Authority fails closed.</strong> No implicit
+          escalation. Absent explicit policy grant, a chip acts as if
+          it has none.</li>
+        <li><strong>Receipts for every run, including quiet
+          ones.</strong> A chip that observes and decides not to act
+          still produces a receipt saying so.</li>
+        <li><strong>Taint is transitive.</strong> Anything a chip's
+          judgment touches carries forward whatever provenance or trust
+          constraints it entered with.</li>
+        <li><strong>Targets own final deduplication.</strong> A chip
+          proposes; whatever system it writes into is the one source of
+          truth for whether that write is new.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap">
+      <h2>Status</h2>
+      <p class="section-lede">
+        v0 experiment — one host (fab),
+        contract under active evolution. See
+        <a href="https://github.com/lavallee/chip/blob/main/spec/chip-spec.md">spec/chip-spec.md</a>
+        for the current spec and
+        <a href="https://github.com/lavallee/chip/blob/main/CHANGELOG.md">CHANGELOG.md</a>
+        for the release log. MIT licensed.
+      </p>
+      <p><a class="btn" href="https://github.com/lavallee/chip" rel="noopener">Star on GitHub →</a></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      chip · <a href="https://github.com/lavallee/chip" rel="noopener">source</a> ·
+      <a href="https://github.com/lavallee/chip/blob/main/LICENSE">MIT license</a> ·
+      <a href="https://github.com/lavallee/chip/blob/main/CHANGELOG.md">changelog</a>
+    </p>
+    <p class="tiny">A contract, not a platform.</p>
+  </div>
+</footer>
+
+</body>
+</html>
