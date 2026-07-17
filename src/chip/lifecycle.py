@@ -142,7 +142,11 @@ def validate_lifecycle_event(data: dict[str, Any]) -> None:
     if not isinstance(details, dict):
         raise LifecycleError("lifecycle event field 'details' must be an object")
 
-    if event in _TUPLE_GATED_EVENTS and not (
+    # Fail-closed asymmetry: mutations that ADD or reshape authority (split/
+    # merge/optimize) must carry their held-out gate; retirement REMOVES a chip
+    # and may be ungated — except model-generation retirement, which asserts a
+    # comparative claim and needs its baseline (checked below).
+    if event in _TUPLE_GATED_EVENTS and event != "retire" and not (
         isinstance(data["tupleKey"], str) and data["tupleKey"].strip()
     ):
         raise LifecycleError(

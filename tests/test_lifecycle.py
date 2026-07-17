@@ -67,12 +67,18 @@ def test_details_must_be_object():
         validate_lifecycle_event(_event(details=["nope"]))
 
 
-@pytest.mark.parametrize("event", ["split", "merge", "optimize", "retire"])
+@pytest.mark.parametrize("event", ["split", "merge", "optimize"])
 def test_tuple_gated_events_require_tuple_key(event):
     with pytest.raises(LifecycleError, match="tupleKey"):
         validate_lifecycle_event(_event(event=event, tupleKey=None))
-    # with a tuple key it passes (retire needs no model-generation reason here)
     validate_lifecycle_event(_event(event=event, tupleKey="cet1-abcd"))
+
+
+def test_retire_may_be_ungated():
+    # Fail-closed asymmetry: adding/reshaping authority is hard, removal is
+    # easy — an owning system may retire on judgment alone (spec 13.1).
+    validate_lifecycle_event(_event(event="retire", tupleKey=None,
+                                    details={"reason": "superseded"}))
 
 
 def test_model_generation_retire_requires_baseline():

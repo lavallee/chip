@@ -881,9 +881,12 @@ the acting `operator`, the `chipAlias` and `chipVersion`, the
   path has proven routine (the candidate ledger, §21-adjacent conventions, is the
   evidence), not eagerly — eager minting never amortizes its authoring and
   evaluation upkeep.
-- **`split`, `merge`, `optimize`, and `retire` MUST carry the held-out `tupleKey`
-  that gated them.** These are evidence-bearing transitions; the evaluated tuple
+- **`split`, `merge`, and `optimize` MUST carry the held-out `tupleKey` that
+  gated them.** These are evidence-bearing transitions; the evaluated tuple
   (§10.2) that justified the change is part of the record, not a footnote.
+  `retire` MAY be ungated — the asymmetry is deliberate: mutations that add or
+  reshape authority are hard, removal is easy. An owning system may retire a
+  chip on judgment alone (superseded, low-value), receipted but unproven.
 - **A `retire` whose reason is `model-generation` MUST reference a raw-model
   baseline comparison** (in `details`): the evidence that the raw model now
   matches or beats the chip on its held-out suite. Retiring banked judgment
