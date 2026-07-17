@@ -1,30 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/lavallee/chip/tree/main/examples/publication-attention/schemas/quiet-run.json@1",
-  "title": "Quiet run (v1)",
-  "description": "A first-class successful no-finding result (spec 9). Records only the attention semantics needed to stay quiet next time.",
+  "title": "Quiet run body (v1)",
+  "description": "The `body` of a §8.2 `quiet` response — a first-class successful no-finding result (spec 9), the shape a host validates as `response.body` on the quiet output port. Records only the attention semantics needed to stay quiet next time.",
   "type": "object",
   "additionalProperties": true,
-  "required": ["kind", "reason"],
+  "required": ["reason"],
   "properties": {
-    "kind": { "const": "quiet" },
     "reason": {
       "type": "string",
-      "description": "Why the run was quiet, e.g. 'already-seen', 'duplicate-content', 'not-after-cursor'."
+      "description": "Why the run was quiet, e.g. 'duplicate-content', 'not-after-cursor', 'already-issued'."
     },
-    "lineage": {
-      "type": "object",
-      "additionalProperties": true,
-      "description": "Passthrough of the originating signal lineage, when present."
-    },
-    "producedBy": {
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {
-        "chip": { "type": "string" },
-        "run": { "type": "string" },
-        "circuit": { "type": "string" }
-      }
-    }
+    "lineageKey": { "type": "string", "description": "Passthrough of the originating §8.1 signal lineage key, when present." }
   }
 }

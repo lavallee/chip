@@ -1,80 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/lavallee/chip/tree/main/examples/publication-attention/schemas/materiality-finding.json@1",
-  "title": "Materiality finding (v1)",
-  "description": "An evidence-linked materiality assessment. Cited evidence quotes source text ONLY through taint-preserving quoted_span structures, kept structurally separate from the chip-authored assessment (spec 8.2).",
+  "title": "Materiality finding body (v1)",
+  "description": "Input port copy (matches the upstream chip's `finding` output port by ref @1). Describes the `body` of the §8.2 materiality finding this chip consumes from the prior chip's response (delivered by the host as `activation['upstream']`). Cited source spans arrive on the sibling `upstream.evidence` field as taint-preserving quoted_span structures, kept structurally separate from the assessment (spec 8.2).",
   "type": "object",
   "additionalProperties": true,
-  "required": ["kind", "assessment", "evidence", "lineage", "producedBy"],
+  "required": ["lineageKey"],
   "properties": {
-    "kind": { "const": "finding" },
+    "lineageKey": { "type": "string", "description": "Passthrough of the originating §8.1 signal lineage key." },
+    "sourceUrl": { "type": "string", "description": "Canonical source URL of the assessed publication." },
+    "reason": { "type": "string", "description": "Present on an abstain body, e.g. 'insufficient-evidence'." },
     "assessment": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["material", "confidence", "rationale"],
+      "description": "Chip/gateway-authored claim (finding only). May be a taint-marked value when derived from hostile model output.",
+      "required": ["material", "confidence"],
       "properties": {
         "material": { "type": "boolean" },
-        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-        "rationale": { "type": "string", "description": "Chip/gateway-authored claim. Not a verbatim source span." }
-      }
-    },
-    "evidence": {
-      "type": "array",
-      "description": "Each item links a claim to a taint-preserving quoted source span, its source URL, and content digest.",
-      "items": {
-        "type": "object",
-        "additionalProperties": true,
-        "required": ["claim", "quoted_span", "source_url", "digest"],
-        "properties": {
-          "claim": { "type": "string" },
-          "quoted_span": {
-            "type": "object",
-            "description": "Taint-preserving structure: {value, taint}. Trust classification survives to the downstream adapter.",
-            "required": ["value", "taint"],
-            "properties": {
-              "value": {},
-              "taint": {
-                "type": "object",
-                "required": ["trust", "source"],
-                "properties": {
-                  "trust": { "type": "string" },
-                  "source": { "type": "string" },
-                  "via": { "type": "array" }
-                }
-              }
-            }
-          },
-          "source_url": { "type": "string" },
-          "digest": { "type": "string" }
-        }
-      }
-    },
-    "lineage": {
-      "type": "object",
-      "description": "Passthrough of the originating signal lineage.",
-      "additionalProperties": true,
-      "required": ["feed", "entry_id", "content_digest"],
-      "properties": {
-        "feed": { "type": "string" },
-        "entry_id": { "type": "string" },
-        "content_digest": { "type": "string" }
-      }
-    },
-    "uncertainty": {
-      "type": "object",
-      "additionalProperties": true,
-      "description": "Confidence, counterevidence, and any abstention pressure."
-    },
-    "counterevidence": { "type": "array" },
-    "expiry": { "type": "string", "description": "Freshness deadline after which the finding must be re-derived." },
-    "producedBy": {
-      "type": "object",
-      "additionalProperties": true,
-      "required": ["chip", "run"],
-      "properties": {
-        "chip": { "type": "string" },
-        "run": { "type": "string" },
-        "circuit": { "type": "string" }
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
       }
     }
   }

@@ -1,28 +1,31 @@
 {
   "kind": "quiet",
-  "description": "The signal's content digest is already in seen state; quiet, no gateway call.",
-  "priorState": {
-    "cursor": { "value": "2026-07-15T14:00:00Z", "lineage": "https://agency.example.gov/transport-safety/rss" },
-    "seen": ["sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"]
-  },
+  "description": "A §8.1 signal envelope whose content carries no assessable body: nothing to judge, so the chip stays quiet with no gateway call. Content-driven (not state-driven), so a host `evaluate` that zeroes prior state reaches the same outcome.",
+  "priorState": { "cursor": null, "seen": [] },
   "config": { "beat": "transportation-safety", "runId": "run-quiet-1" },
   "input": {
-    "id": "sig-2026-07-15-001-again",
-    "lineage": {
-      "feed": "https://agency.example.gov/transport-safety/rss",
-      "entry_id": "entry-2026-07-15-001",
-      "content_digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
-    },
-    "published_at": "2026-07-15T14:00:00Z",
-    "title": "Agency orders recall of Model X brake actuators after inspection findings",
-    "url": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
-    "body": "The National Transportation Safety Agency has ordered a recall of Model X brake actuators.",
-    "source": { "name": "National Transportation Safety Agency", "authority_context": "public-safety-agency" }
+    "id": "sig-2026-07-16-empty",
+    "type": "publication",
+    "schemaVersion": "1",
+    "observedAt": "2026-07-16T08:05:00Z",
+    "receivedAt": "2026-07-16T08:06:00Z",
+    "source": "agency.example.gov/transport-safety/rss",
+    "authorityContext": "public-safety-agency",
+    "digest": "sha256:e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0",
+    "lineageKey": "sha256:e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0",
+    "dedupeKey": "sha256:e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0",
+    "trust": "hostile",
+    "content": {
+      "title": "Empty feed placeholder",
+      "url": "https://agency.example.gov/transport-safety/reports/2026-07-16-empty",
+      "body": "",
+      "published_at": "2026-07-16T08:00:00Z"
+    }
   },
   "cannedGatewayResult": null,
   "expected": {
     "responseKind": "quiet",
-    "reason": "duplicate-content",
+    "reason": "empty-content",
     "noGatewayCall": true,
     "noEffect": true
   }

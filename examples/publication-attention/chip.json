@@ -48,7 +48,7 @@
 
   "implementation": {
     "runtime": "python",
-    "entrypoint": "chip_impl:run",
+    "entrypoint": "impl.chip_impl:run",
     "stagesAreContractual": false,
     "stages": [
       { "id": "normalize", "kind": "code", "determinism": "deterministic" },
@@ -77,7 +77,7 @@
 
   "authority": {
     "maximumEffectClass": "observe",
-    "prohibited": ["commission", "publish", "merge"],
+    "prohibited": ["experiment", "draft", "promote"],
     "approval": { "mode": "most-restrictive-wins" }
   },
 

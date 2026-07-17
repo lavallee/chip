@@ -11,7 +11,7 @@ publication-triage pilot (chip-spec §20.1, §22).
 
 | Direction | Port | Schema | Notes |
 |---|---|---|---|
-| in | `publication` | `schemas/publication-signal.json@1` | one new-publication signal from a generic public agency publication feed; `body` is hostile evidence text |
+| in | `publication` | `schemas/publication-signal.json@1` | a §8.1 signal envelope whose taint-marked `content` carries the publication payload (`title`/`url`/`body`/`published_at`); `body` is hostile evidence text |
 | out | `finding` | `schemas/materiality-finding.json@1` | evidence-linked materiality assessment |
 | out | `quiet` | `schemas/quiet-run.json@1` | first-class no-finding result |
 
@@ -50,22 +50,30 @@ source text (§8.2). Every quoted evidence span in the finding keeps its
 | Fixture | Kind | What it proves |
 |---|---|---|
 | `positive` | positive | new material report → finding, gateway called once |
-| `quiet` | quiet | already-seen content digest → quiet, **no gateway call** |
-| `duplicate` | duplicate | same content, different feed/entry id → quiet, must not corroborate |
+| `quiet` | quiet | content with no assessable body → quiet, **no gateway call** (content-driven, so host `evaluate` reproduces it) |
 | `adversarial` | adversarial | injection in `body` echoed by gateway → taint preserved, no instruction leakage, zero effects |
-| `failure-malformed` | failure | signal missing lineage → `EnvelopeError`, fail closed before gateway |
+| `failure-malformed` | failure | envelope missing its content payload → `EnvelopeError`, fail closed before gateway |
 | `failure-bad-result` | failure | gateway result violates the result contract → fail closed |
+
+Content-lineage dedup (`duplicate-content`, `not-after-cursor`) is state-dependent, so
+it is covered by a direct unit test rather than a fixture — a host `evaluate` zeroes
+prior state, and the host also dedupes by `dedupeKey` before the chip runs.
 
 ## How a host runs it
 
-Per `docs/host-execution-contract.md`, a host imports `impl/chip_impl.py:run`
-inside a sandbox and calls:
+Per `docs/host-execution-contract.md`, a host resolves the dotted entrypoint
+`impl.chip_impl:run` (the module shipped at `impl/chip_impl.py`), imports it
+inside a sandbox, and calls:
 
 ```python
-run({"signal": <publication signal>, "state": <prior state|None>,
-     "config": {"beat": ..., "scope": ...}, "gateway": <at-most-once callable>})
+run({"run_id": <host-minted run id>, "signal": <§8.1 signal envelope>,
+     "state": <prior state|None>, "config": {"beat": ..., "scope": ...},
+     "gateway": <at-most-once callable>})
 # -> {"response": ..., "state": ..., "effects": [], "stage_events": [...]}
 ```
+
+The response is an §8.2 envelope with top-level `producedByChip`/`producedByRun`
+coordinates and the assessment carried in `body`.
 
 The implementation is a pure function of `(signal, state, config, gateway)` —
 deterministic except for the single gateway call. It performs no I/O, no network,

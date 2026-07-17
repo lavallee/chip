@@ -51,7 +51,7 @@
 
   "implementation": {
     "runtime": "python",
-    "entrypoint": "chip_impl:run",
+    "entrypoint": "impl.chip_impl:run",
     "stagesAreContractual": false,
     "stages": [
       { "id": "gate", "kind": "policy", "determinism": "deterministic" },
@@ -67,7 +67,7 @@
 
   "authority": {
     "maximumEffectClass": "synthesize",
-    "prohibited": ["commission", "publish", "merge"],
+    "prohibited": ["experiment", "draft", "promote"],
     "approval": { "mode": "most-restrictive-wins" }
   },
 

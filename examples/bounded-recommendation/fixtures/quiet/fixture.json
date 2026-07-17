@@ -1,37 +1,30 @@
 {
   "kind": "quiet",
-  "description": "Idempotent re-run of a finding already issued (single-flight retry). Quiet, zero effects.",
-  "priorState": { "issued": ["sha256:d44f0e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6"] },
-  "config": { "targetOwner": "owner://research-ideas", "runId": "run-brec-quiet-1" },
+  "description": "A §8.1 signal envelope carrying no upstream finding (no assessment in content): nothing to recommend on, so the chip stays quiet with zero effects. State-independent, so a host `evaluate` reaches the same outcome.",
+  "priorState": { "issued": [] },
+  "config": {
+    "effect_target": "owner://research-ideas",
+    "promise_id": "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation",
+    "runId": "run-brec-quiet-1"
+  },
   "input": {
-    "kind": "finding",
-    "assessment": { "material": true, "confidence": 0.79, "rationale": "Bridge inspection anomaly is material." },
-    "evidence": [
-      {
-        "claim": "Anomaly flagged for follow-up.",
-        "quoted_span": {
-          "value": "flagged an anomaly in the load-bearing joints requiring follow-up inspection",
-          "taint": {
-            "trust": "hostile",
-            "source": "https://agency.example.gov/transport-safety/reports/2026-07-14-bridge",
-            "via": ["https://agency.example.gov/transport-safety/reports/2026-07-14-bridge", "assess"]
-          }
-        },
-        "source_url": "https://agency.example.gov/transport-safety/reports/2026-07-14-bridge",
-        "digest": "sha256:d44f0e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6"
-      }
-    ],
-    "lineage": {
-      "feed": "https://agency.example.gov/transport-safety/rss",
-      "entry_id": "entry-2026-07-14-030",
-      "content_digest": "sha256:d44f0e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6"
-    },
-    "producedBy": { "chip": "https://github.com/lavallee/chip/tree/main/examples/publication-attention", "run": "run-pos-3" }
+    "id": "sig-2026-07-14-noupstream",
+    "type": "materiality-finding",
+    "schemaVersion": "1",
+    "observedAt": "2026-07-14T12:05:00Z",
+    "receivedAt": "2026-07-14T12:06:00Z",
+    "source": "agency.example.gov/transport-safety/rss",
+    "authorityContext": "public-safety-agency",
+    "digest": "sha256:d44f0e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6",
+    "lineageKey": "sha256:d44f0e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6",
+    "dedupeKey": "sha256:d44f0e1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6",
+    "trust": "hostile",
+    "content": { "note": "upstream stage produced a quiet result; no finding to act on" }
   },
   "cannedGatewayResult": null,
   "expected": {
     "responseKind": "quiet",
-    "reason": "already-issued",
+    "reason": "no-finding",
     "effectCount": 0
   }
 }

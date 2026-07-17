@@ -1,38 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation/schemas/recommendation-issued.json@1",
-  "title": "Recommendation issued (v1)",
-  "description": "The output envelope emitted on the `recommendation-issued` port when the chip requests one recommendation effect. The terminal response kind is `finding` (one of the four §8.2 run outcomes); the issued recommendation rides in the `recommendation` field. The effect itself is dispatched by the host under human approval; this records the stable effect key and lineage.",
+  "title": "Recommendation issued body (v1)",
+  "description": "The `body` of the §8.2 response emitted on the `recommendation-issued` port when the chip requests one recommendation effect — the shape a host validates as `response.body`. The terminal response kind is `finding` (one of the four §8.2 run outcomes); the issued recommendation rides in `body.recommendation`. The effect itself is dispatched by the host under human approval; this records the stable effect key and lineage. The same port also carries an `abstain` body (with `reason`), so only `lineageKey` is universally required.",
   "type": "object",
   "additionalProperties": true,
-  "required": ["kind", "effectKey", "lineage", "producedBy"],
+  "required": ["lineageKey"],
   "properties": {
-    "kind": { "const": "finding" },
     "recommendation": {
       "type": "object",
       "additionalProperties": true,
       "description": "The issued recommendation marker (e.g. {issued: true, effectKey})."
     },
     "effectKey": { "type": "string", "description": "The target-side deduplication key (cek1-...)." },
-    "lineage": {
-      "type": "object",
-      "additionalProperties": true,
-      "required": ["content_digest"],
-      "properties": {
-        "feed": { "type": "string" },
-        "entry_id": { "type": "string" },
-        "content_digest": { "type": "string" }
-      }
-    },
-    "producedBy": {
-      "type": "object",
-      "additionalProperties": true,
-      "required": ["chip", "run"],
-      "properties": {
-        "chip": { "type": "string" },
-        "run": { "type": "string" },
-        "circuit": { "type": "string" }
-      }
-    }
+    "lineageKey": { "type": "string", "description": "Passthrough of the originating §8.1 signal lineage key." },
+    "reason": { "type": "string", "description": "Present on an abstain body, e.g. 'evidence-taint-lost-refuse-to-launder'." }
   }
 }

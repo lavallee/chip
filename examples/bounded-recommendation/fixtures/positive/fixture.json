@@ -1,35 +1,43 @@
 {
   "kind": "positive",
-  "description": "A well-formed, taint-preserving materiality finding yields exactly one effect request with a stable key.",
+  "description": "A well-formed, taint-preserving materiality finding — delivered inline as the §8.1 signal envelope's content (the isolation/evaluate delivery mode) — yields exactly one effect request with a stable key.",
   "priorState": { "issued": [] },
-  "config": { "targetOwner": "owner://research-ideas", "promiseId": "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation", "runId": "run-brec-pos-1" },
+  "config": {
+    "effect_target": "owner://research-ideas",
+    "promise_id": "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation",
+    "runId": "run-brec-pos-1"
+  },
   "input": {
-    "kind": "finding",
-    "assessment": { "material": true, "confidence": 0.86, "rationale": "A recall order affecting braking performance is material to the beat." },
-    "evidence": [
-      {
-        "claim": "Directly describes a safety-critical recall with a defined scope.",
-        "quoted_span": {
-          "value": "ordered a recall of Model X brake actuators manufactured between 2024 and 2025 after field inspections found premature wear that could reduce braking performance",
-          "taint": {
-            "trust": "hostile",
-            "source": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
-            "via": ["https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx", "assess"]
-          }
-        },
-        "source_url": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
-        "digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
-      }
-    ],
-    "lineage": {
-      "feed": "https://agency.example.gov/transport-safety/rss",
-      "entry_id": "entry-2026-07-15-001",
-      "content_digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
-    },
-    "uncertainty": { "confidence": 0.86 },
-    "counterevidence": [],
-    "expiry": "P30D",
-    "producedBy": { "chip": "https://github.com/lavallee/chip/tree/main/examples/publication-attention", "run": "run-pos-1" }
+    "id": "sig-2026-07-15-001",
+    "type": "materiality-finding",
+    "schemaVersion": "1",
+    "observedAt": "2026-07-15T14:10:00Z",
+    "receivedAt": "2026-07-15T14:11:00Z",
+    "source": "agency.example.gov/transport-safety/rss",
+    "authorityContext": "public-safety-agency",
+    "digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc",
+    "lineageKey": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc",
+    "dedupeKey": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc",
+    "trust": "hostile",
+    "content": {
+      "assessment": { "material": true, "confidence": 0.86, "rationale": "A recall order affecting braking performance is material to the beat." },
+      "lineageKey": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc",
+      "evidence": [
+        {
+          "claim": "Directly describes a safety-critical recall with a defined scope.",
+          "quoted_span": {
+            "value": "ordered a recall of Model X brake actuators manufactured between 2024 and 2025 after field inspections found premature wear that could reduce braking performance",
+            "taint": {
+              "trust": "hostile",
+              "source": "agency.example.gov/transport-safety/rss",
+              "via": ["sig-2026-07-15-001", "assess"]
+            }
+          },
+          "source_url": "https://agency.example.gov/transport-safety/reports/2026-07-15-recall-modelx",
+          "digest": "sha256:a11ce9d0b1c2d3e4f5061728394a5b6c7d8e9f00112233445566778899aabbcc"
+        }
+      ]
+    }
   },
   "cannedGatewayResult": null,
   "expected": {

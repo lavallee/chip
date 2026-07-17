@@ -28,6 +28,11 @@ Clarified:
   sentinel `"pending"` at construction; the host MUST back-fill the real receipt
   reference before persisting or dispatching, and a dispatched effect carrying
   `"pending"` is a host conformance violation.
+- **Entrypoint is a dotted module path (§7.1).** `implementation.entrypoint` is a
+  dotted module path relative to the package root plus the callable; the host
+  turns dots into directory separators, so a module at `impl/chip_impl.py` is
+  addressed as `impl.chip_impl:run` (correcting the 0.4.0 `chip_impl:run`
+  example, which only resolves for a package-root module).
 - **`run_id` in activation.** The host injects a required top-level `run_id` into
   the activation; implementations use it for response coordinates
   (`producedByRun`) and never feed it into the effect key.

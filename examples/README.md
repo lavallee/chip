@@ -60,12 +60,13 @@ credentials and no network**. In fixture/eval mode the host substitutes the
 canned result for the live gateway; the pure `run(activation)` implementation
 cannot tell the difference (`docs/host-execution-contract.md`).
 
-`tests/test_examples.py` is exactly such a host: it loads both packages, checks
-fixture coverage, validates the circuit, and drives each implementation over
-every fixture with a fake at-most-once gateway — asserting the quiet/duplicate,
-adversarial, idempotency, and fail-closed properties above. Fab is the reference
-host and `somm` the reference gateway; nothing in these packages depends on
-either.
+`tests/test_examples.py` is exactly such a host: it loads both packages the way a
+host resolves the dotted entrypoint, checks fixture coverage, validates the
+circuit, and drives each implementation over every fixture with an at-most-once
+gateway that taints its result on hostile input — asserting the quiet, content
+dedup, adversarial, idempotency, and fail-closed properties above, and that the
+library accepts every response and effect envelope. Fab is the reference host and
+`somm` the reference gateway; nothing in these packages depends on either.
 
 ## A note on authority (per-chip effective ceiling)
 

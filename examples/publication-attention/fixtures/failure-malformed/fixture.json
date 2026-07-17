@@ -1,15 +1,20 @@
 {
   "kind": "failure",
-  "description": "Malformed signal missing lineage. Normalization fails closed with an EnvelopeError before any gateway call or state mutation.",
+  "description": "Malformed signal: a well-formed §8.1 envelope but with no content payload. Normalization fails closed with an EnvelopeError before any gateway call or state mutation.",
   "priorState": { "cursor": null, "seen": [] },
   "config": { "beat": "transportation-safety", "runId": "run-fail-1" },
   "input": {
     "id": "sig-broken-001",
-    "published_at": "2026-07-16T10:00:00Z",
-    "title": "Untitled",
-    "url": "https://agency.example.gov/transport-safety/reports/broken",
-    "body": "A report body with no lineage block at all.",
-    "source": { "name": "National Transportation Safety Agency", "authority_context": "public-safety-agency" }
+    "type": "publication",
+    "schemaVersion": "1",
+    "observedAt": "2026-07-16T10:00:00Z",
+    "receivedAt": "2026-07-16T10:01:00Z",
+    "source": "agency.example.gov/transport-safety/rss",
+    "authorityContext": "public-safety-agency",
+    "digest": "sha256:0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0",
+    "lineageKey": "sha256:0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0",
+    "dedupeKey": "sha256:0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0bad0",
+    "trust": "hostile"
   },
   "cannedGatewayResult": null,
   "expected": {

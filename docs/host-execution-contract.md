@@ -6,9 +6,12 @@ responsibilities govern. It will move into the spec once a second host exercises
 
 ## Entrypoint
 
-A python-runtime chip package declares `implementation.entrypoint` as
-`"<module>:<callable>"`, resolved relative to the chip package directory
-(v1 convention: `impl/chip_impl.py` exposing `run`, i.e. `chip_impl:run`).
+A python-runtime chip package declares `implementation.entrypoint` as a dotted
+module path relative to the chip package root, plus the callable:
+`"<dotted.module.path>:<callable>"`. The host resolves the module path relative
+to the package root, turning dots into directory separators — so a module
+shipped at `impl/chip_impl.py` is addressed as `impl.chip_impl`. The v1
+convention is `impl/chip_impl.py` exposing `run`, i.e. `impl.chip_impl:run`.
 
 The host imports the module **inside its sandbox** (never in the host process
 that holds credentials) and invokes:

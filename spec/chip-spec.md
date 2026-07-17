@@ -324,7 +324,7 @@ tooling may layer on later; it is not required by this specification.)
 
   "implementation": {
     "runtime": "python",
-    "entrypoint": "chip_impl:run",
+    "entrypoint": "impl.chip_impl:run",
     "stagesAreContractual": false,
     "stages": [
       { "id": "normalize", "kind": "code", "determinism": "deterministic" },
