@@ -38,6 +38,10 @@ class Fixture:
     input_signal: dict[str, Any]
     expected: dict[str, Any]
     canned_gateway_result: dict[str, Any] | None = None
+    # Optional pre-seeded chip state for state-dependent behaviors (e.g. a
+    # duplicate/dedup case). Hosts MUST pass this as the activation ``state``
+    # when running the fixture; ``None`` means first-run (fresh state).
+    prior_state: dict[str, Any] | None = None
     path: Path | None = field(default=None, compare=False)
 
     @classmethod
@@ -53,12 +57,16 @@ class Fixture:
         expected = data.get("expected")
         if not isinstance(expected, dict) or not expected:
             raise FixtureError(f"fixture {name!r}: missing 'expected' outcome assertion")
+        prior_state = data.get("priorState")
+        if prior_state is not None and not isinstance(prior_state, dict):
+            raise FixtureError(f"fixture {name!r}: 'priorState' must be an object when present")
         return cls(
             name=name,
             kind=kind,
             input_signal=data["input"],
             expected=expected,
             canned_gateway_result=data.get("cannedGatewayResult"),
+            prior_state=prior_state,
             path=path,
         )
 

@@ -82,3 +82,31 @@ def test_coverage_missing_kind_rejected(tmp_path):
     with pytest.raises(FixtureError) as exc:
         validate_fixture_coverage(tmp_path)
     assert "failure" in str(exc.value) and "adversarial" in str(exc.value)
+
+
+def test_prior_state_parsed_and_optional(tmp_path):
+    import json
+
+    d = tmp_path / "dup"
+    d.mkdir()
+    (d / "fixture.json").write_text(json.dumps({
+        "kind": "quiet", "input": {"id": "s1"}, "expected": {"kind": "quiet"},
+        "priorState": {"seenSnapshots": ["sha256:abc"]},
+    }))
+    from chip.fixtures import load_fixtures
+    fx = load_fixtures(tmp_path)[0]
+    assert fx.prior_state == {"seenSnapshots": ["sha256:abc"]}
+
+
+def test_prior_state_must_be_object(tmp_path):
+    import json
+
+    d = tmp_path / "bad"
+    d.mkdir()
+    (d / "fixture.json").write_text(json.dumps({
+        "kind": "quiet", "input": {"id": "s1"}, "expected": {"kind": "quiet"},
+        "priorState": ["not-an-object"],
+    }))
+    from chip.fixtures import load_fixtures
+    with pytest.raises(FixtureError, match="priorState"):
+        load_fixtures(tmp_path)
