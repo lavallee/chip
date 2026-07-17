@@ -81,7 +81,9 @@ def run(activation: dict[str, Any]) -> dict[str, Any]:
     finding: dict[str, Any] = activation["signal"]
     state: dict[str, Any] = activation.get("state") or _empty_state()
     config: dict[str, Any] = activation.get("config") or {}
-    run_id = config.get("runId", "run-local")
+    # The host injects the run id at the top level of the activation (host
+    # execution contract); fall back to a config value / local default.
+    run_id = activation.get("run_id") or config.get("runId", "run-local")
 
     lineage = finding.get("lineage")
     if not isinstance(lineage, dict) or not lineage.get("content_digest"):
@@ -134,7 +136,7 @@ def run(activation: dict[str, Any]) -> dict[str, Any]:
 
     effect_request = {
         "type": EFFECT_TYPE,
-        "class": "recommend",
+        "class": "synthesize",
         "targetOwner": target_owner,
         "payload": payload,
         "idempotencyKey": effect_key,

@@ -11,9 +11,12 @@ from __future__ import annotations
 
 import itertools
 
+import pytest
+
 from chip.conformance import HostDriver, RunReport, Scenario, run_all
 from chip.conformance.hostkit import (
     check_at_least_once_single_effect,
+    check_dispatched_effects_carry_receipt_refs,
     check_duplicate_produces_no_effects,
     check_invalid_judgment_fails_closed,
     check_pause_and_revoke_produce_receipts,
@@ -95,6 +98,9 @@ class FakeHost:
         request = {
             "type": "recommend-research", "class": effect_class,
             "targetOwner": _TARGET_OWNER, "idempotencyKey": key,
+            # Host back-fills the real judgment-receipt ref (the run id every
+            # receipt binds via coordinates.run) before dispatch — never "pending".
+            "judgmentReceiptRef": run_id,
         }
         if key in state.seen_effect_keys:
             # Target-side dedup: no new effect, compact attention receipt.
@@ -168,7 +174,7 @@ def test_fakehost_satisfies_protocol():
 def test_run_all_conformance_checks(binding_dict, linear_circuit_dict, make_signal):
     scenario = _scenario(binding_dict, linear_circuit_dict, make_signal)
     passed = run_all(FakeHost(), scenario)
-    assert len(passed) == 7
+    assert len(passed) == 8
 
 
 def test_individual_checks(binding_dict, linear_circuit_dict, make_signal):
@@ -177,9 +183,25 @@ def test_individual_checks(binding_dict, linear_circuit_dict, make_signal):
     check_duplicate_produces_no_effects(FakeHost(), scenario)
     check_invalid_judgment_fails_closed(FakeHost(), scenario)
     check_at_least_once_single_effect(FakeHost(), scenario)
+    check_dispatched_effects_carry_receipt_refs(FakeHost(), scenario)
     check_pause_and_revoke_produce_receipts(FakeHost(), scenario)
     check_unevaluated_tuple_capped_at_observe(FakeHost(), scenario)
     check_undeclared_capability_denied(FakeHost(), scenario)
+
+
+def test_dispatched_effect_with_pending_ref_is_rejected(binding_dict, linear_circuit_dict, make_signal):
+    scenario = _scenario(binding_dict, linear_circuit_dict, make_signal)
+
+    class PendingHost(FakeHost):
+        def activate(self, installation_id: str, signal: dict) -> RunReport:
+            report = super().activate(installation_id, signal)
+            # A misbehaving host that never back-fills the receipt ref.
+            for eff in report.effects_executed:
+                eff["judgmentReceiptRef"] = "pending"
+            return report
+
+    with pytest.raises(AssertionError, match="pending"):
+        check_dispatched_effects_carry_receipt_refs(PendingHost(), scenario)
 
 
 def test_receipt_tiers_are_what_checks_expect(binding_dict, linear_circuit_dict, make_signal):

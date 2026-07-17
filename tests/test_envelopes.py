@@ -118,13 +118,27 @@ def test_effect_key_differs_on_any_field():
     assert base != derive_effect_key("lin", "t", "o", "p2")
 
 
-def test_effect_key_rejects_run_id_looking_input():
+def test_effect_key_rejects_run_marker_input():
+    # Explicit run/attempt markers are still rejected.
     with pytest.raises(EnvelopeError):
         derive_effect_key("run:abcd", "t", "o", "p")
     with pytest.raises(EnvelopeError):
-        derive_effect_key("lin", "t", "o", str(uuid.uuid4()))
+        derive_effect_key("run-abcd", "t", "o", "p")
     with pytest.raises(EnvelopeError):
-        derive_effect_key("lin", "attempt_3", "o", "p")
+        derive_effect_key("lin", "attempt-3", "o", "p")
+    with pytest.raises(EnvelopeError):
+        derive_effect_key("lin", "t", "o", "attempt:7")
+    with pytest.raises(EnvelopeError):
+        derive_effect_key("host/runs/abc/effect", "t", "o", "p")
+
+
+def test_effect_key_accepts_uuid_lineage():
+    # Stable source lineage keys legitimately embed UUIDs (message/entry ids).
+    key = derive_effect_key(str(uuid.uuid4()), "recommend-research", "owner:ideas", "promise#p")
+    assert key.startswith("cek1-")
+    # An entry id embedding a UUID is fine too.
+    embedded = f"entry-{uuid.uuid4()}"
+    assert derive_effect_key(embedded, "t", "o", "p").startswith("cek1-")
 
 
 def test_effect_key_rejects_empty():

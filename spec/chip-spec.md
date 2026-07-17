@@ -1,12 +1,13 @@
 # Chips and circuits
 
 Status: `candidate specification`  
-Version: `0.4.0`  
+Version: `0.4.1`  
 Date: `2026-07-16`  
 Implementation status: `v1 experiment in progress (Fab host)`  
 History: v0.2.0 followed an independent adversarial model review; v0.3.0 was the
 first published edition, relocated to this repository; v0.4.0 folds in
-implementation-informed clarifications from the first host (Fab) and first pilot.
+implementation-informed clarifications from the first host (Fab) and first pilot;
+v0.4.1 adds host-review clarifications from the first host implementation.
 
 ## Abstract
 
@@ -451,7 +452,11 @@ Source authority remains claim-specific.
 Trust classification is transitive. Every response field derived from hostile
 input MUST retain a taint and provenance marker. Quoted source spans MUST be
 structurally separate from chip-authored assessment rather than interpolated
-into instruction-position prose. A downstream adapter or UI consuming the
+into instruction-position prose. Instruction-position enforcement covers a
+spec-defined default key set (`instruction`, `instructions`, `directive`,
+`command`, `system`, `system_prompt`, `systemPrompt`, `prompt`) plus any
+field names a chip declares in its manifest's `contract.instructionFields`;
+hosts enforce the union. A downstream adapter or UI consuming the
 response MUST preserve that distinction. Removing taint is a policy decision
 with its own evidence and receipt, not a formatting operation.
 
@@ -593,11 +598,18 @@ Evaluation evidence is valid only for the tuple:
 
 Changing any member creates an unevaluated tuple. An unevaluated binding is
 capped at `observe` until the relevant held-out suite passes; a profile alias
-MUST NOT silently inherit a result from the model it previously resolved to.
+MUST NOT silently inherit a result from the model it previously resolved to. The
+observe cap is binding-level, not per-run: a gateway-bearing binding whose tuple
+is unevaluated is capped at `observe` for every run, including runs where the
+implementation happens not to invoke the gateway.
 
 The host MUST validate the structured result before it can influence state or
-effects. Re-running a Somm stage MAY produce a different judgment. A receipt
-must preserve the actual result used rather than claiming deterministic replay.
+effects. When the request carried tainted content, the host MUST apply taint
+markers to the result's fields before returning it to the implementation, with
+trust inherited from the request's most-hostile input; model output derived from
+hostile input is hostile-derived (§8.2 transitivity). Re-running a Somm stage MAY
+produce a different judgment. A receipt must preserve the actual result used
+rather than claiming deterministic replay.
 
 ### 10.3 Implementation classes
 
@@ -1104,10 +1116,14 @@ Security and durability suites MUST include:
 
 Model-backed chips require the same-task baseline and variant with fixed input
 snapshots. Results are recorded only for the exact implementation digest, Somm
-profile, served model, and harness tuple. A circuit also requires an end-to-end
-suite; constituent chip results do not compose automatically. Held-out
-behavioral improvement, not instruction compliance or artifact completeness,
-governs promotion.
+profile, served model, and harness tuple. A fixture-canned evaluation validates
+the deterministic envelope and records a tuple whose served model is the canned
+marker; it does not evaluate a live model tuple. Lifting a live binding above
+`observe` therefore requires the held-out suite to run against the live gateway,
+so the recorded tuple matches what activation will compute. A circuit also
+requires an end-to-end suite; constituent chip results do not compose
+automatically. Held-out behavioral improvement, not instruction compliance or
+artifact completeness, governs promotion.
 
 Registry and board metrics SHOULD include:
 

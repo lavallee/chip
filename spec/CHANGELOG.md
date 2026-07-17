@@ -6,6 +6,43 @@ implementation.
 
 Schema identifier: `chip.spec/v0alpha1`.
 
+## 0.4.1 — 2026-07-16
+
+Host-review clarifications from the first host implementation. These sharpen the
+contract without changing the schema identifier (still `chip.spec/v0alpha1`).
+
+Clarified:
+
+- **Instruction-field union (§8.2).** Instruction-position enforcement covers a
+  spec-defined default key set (`instruction`, `instructions`, `directive`,
+  `command`, `system`, `system_prompt`, `systemPrompt`, `prompt`) plus any field
+  names a chip declares in its manifest `contract.instructionFields`; hosts
+  enforce the union rather than inventing a per-host heuristic.
+- **Lineage-key stability guard (§8.3).** The effect-key derivation guard rejects
+  only explicit run/attempt markers, not UUID-shaped values — stable source
+  lineage keys (message ids, entry ids) legitimately embed UUIDs. Lineage keys
+  are source-stable identifiers; hosts MUST NOT pass run-scoped ids, and the
+  guard is a best-effort tripwire, not the enforcement.
+- **Pending-receipt back-fill (§8.3).** An effect request is constructed before
+  the run's judgment receipt exists, so `judgmentReceiptRef` may hold the
+  sentinel `"pending"` at construction; the host MUST back-fill the real receipt
+  reference before persisting or dispatching, and a dispatched effect carrying
+  `"pending"` is a host conformance violation.
+- **`run_id` in activation.** The host injects a required top-level `run_id` into
+  the activation; implementations use it for response coordinates
+  (`producedByRun`) and never feed it into the effect key.
+- **Host-applied gateway-result taint (§10.2).** When a gateway request carried
+  tainted content, the host MUST apply taint markers to the result's fields
+  before returning it, with trust inherited from the request's most-hostile
+  input — model output derived from hostile input is hostile-derived (§8.2
+  transitivity).
+- **Binding-level observe cap and canned-vs-live honesty (§10.2, §21).** The
+  unevaluated-tuple observe cap is binding-level, not per-run: it applies to
+  every run including those that do not invoke the gateway. A fixture-canned
+  evaluation validates the deterministic envelope and records a canned-marker
+  tuple; lifting a live binding above `observe` requires the held-out suite to
+  run against the live gateway so the recorded tuple matches activation.
+
 ## 0.4.0 — 2026-07-16
 
 Implementation-informed clarifications from the first host (Fab) and the first

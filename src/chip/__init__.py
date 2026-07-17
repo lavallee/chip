@@ -51,8 +51,11 @@ _LAZY: dict[str, tuple[str, str]] = {
     "EffectRequest": ("chip.envelopes", "EffectRequest"),
     "TrustClass": ("chip.envelopes", "TrustClass"),
     "derive_effect_key": ("chip.envelopes", "derive_effect_key"),
+    "PENDING_RECEIPT_REF": ("chip.envelopes", "PENDING_RECEIPT_REF"),
     # taint
+    "DEFAULT_INSTRUCTION_KEYS": ("chip.taint", "DEFAULT_INSTRUCTION_KEYS"),
     "taint": ("chip.taint", "taint"),
+    "taint_gateway_result": ("chip.taint", "taint_gateway_result"),
     "is_tainted": ("chip.taint", "is_tainted"),
     "propagate": ("chip.taint", "propagate"),
     "quote_span": ("chip.taint", "quote_span"),

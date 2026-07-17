@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation/schemas/research-recommendation.json@1",
   "title": "Research recommendation (v1)",
-  "description": "The effect payload for a rate-limited research recommendation (class 'recommend', human-gated). Evidence quotes are carried as taint-preserving spans; taint is never laundered.",
+  "description": "The effect payload for a rate-limited research recommendation (class 'synthesize', human-gated). Evidence quotes are carried as taint-preserving spans; taint is never laundered.",
   "type": "object",
   "additionalProperties": true,
   "required": ["recommendation", "rationale", "evidence", "lineage"],

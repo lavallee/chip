@@ -27,6 +27,25 @@ from chip.errors import EnvelopeError
 # retrieved content.
 TRUST_LEVELS = ("hostile", "untrusted", "attested", "trusted")
 
+# Field names a host MUST treat as instruction-position when enforcing §8.2 —
+# i.e. keys whose values are interpreted as model/host instruction prose and
+# therefore MUST NOT carry tainted (hostile-derived) content. This is the
+# spec-defined default key set; a chip MAY extend it for its own outputs via the
+# manifest's ``contract.instructionFields`` (see :class:`chip.manifest.Contract`).
+# A conforming host enforces the *union* of this default set and any
+# manifest-declared fields. The set is intentionally broad and covers the common
+# spellings so a host does not have to invent its own heuristic.
+DEFAULT_INSTRUCTION_KEYS = (
+    "instruction",
+    "instructions",
+    "directive",
+    "command",
+    "system",
+    "system_prompt",
+    "systemPrompt",
+    "prompt",
+)
+
 
 def taint(value: Any, trust: str, source: str, via: list[str] | None = None) -> dict[str, Any]:
     """Wrap ``value`` in a taint marker recording its trust level and origin.
@@ -83,6 +102,41 @@ def propagate(parent_taint: dict[str, Any], value: Any, via: str | None = None) 
             "via": chain,
         },
     }
+
+
+def taint_gateway_result(result: Any, parent_taint: dict[str, Any]) -> Any:
+    """Taint every string leaf of a gateway result as hostile-derived (§8.2).
+
+    Model output derived from hostile input is itself hostile-derived: §8.2
+    transitivity means the structured result a gateway returns for a request that
+    contained tainted content MUST inherit that taint before it re-enters the
+    implementation. A host calls this with ``parent_taint`` set to the marker of
+    the request's *most-hostile* input; every string leaf of ``result`` is then
+    wrapped as a tainted ``{value, taint}`` marker whose trust and source are
+    inherited and whose ``via`` chain is the parent's chain with ``"gateway"``
+    appended. Structure is preserved: dicts and lists are walked; numbers,
+    booleans, and ``None`` are left as bare scalars; an already-tainted value is
+    left untouched (never double-wrapped). Raises :class:`EnvelopeError` if
+    ``parent_taint`` is not a valid marker.
+    """
+    if not (isinstance(parent_taint, dict) and "trust" in parent_taint):
+        raise EnvelopeError("taint_gateway_result requires a valid parent taint marker")
+    trust = parent_taint["trust"]
+    source = parent_taint.get("source", "unknown")
+    chain = [*parent_taint.get("via", []), "gateway"]
+
+    def _wrap(obj: Any) -> Any:
+        if is_tainted(obj):
+            return obj
+        if isinstance(obj, str):
+            return {"value": obj, "taint": {"trust": trust, "source": source, "via": list(chain)}}
+        if isinstance(obj, dict):
+            return {key: _wrap(val) for key, val in obj.items()}
+        if isinstance(obj, list):
+            return [_wrap(val) for val in obj]
+        return obj
+
+    return _wrap(result)
 
 
 def quote_span(text: str, source_taint: dict[str, Any]) -> dict[str, Any]:

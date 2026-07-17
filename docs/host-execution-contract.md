@@ -21,6 +21,7 @@ def run(activation: dict) -> dict: ...
 
 ```jsonc
 {
+  "run_id":  "<host-minted run id; REQUIRED>",  // see below
   "signal":  { /* validated signal envelope, spec §8.1; hostile fields taint-marked.
                   May carry a taint-marked `content` payload under assessment. */ },
   "state":   { /* prior installation state per state schema, or null on first run */ },
@@ -37,6 +38,12 @@ def run(activation: dict) -> dict: ...
 }
 ```
 
+`run_id` is a REQUIRED, host-injected top-level key (alongside `signal`, `state`,
+`config`, `gateway`, and `upstream`). The host mints it and the implementation
+uses it for its response coordinates (`producedByRun`) — the implementation MUST
+NOT invent a run id of its own, and MUST NOT feed `run_id` into
+`derive_effect_key` (the effect key excludes run identity, spec §8.3).
+
 The effect-key inputs are deliberately host-supplied: `signal.lineageKey` and the
 effect type come from the envelope and effect declaration, while `config.promise_id`
 and `config.effect_target` are binding/manifest-resolved and injected here. An
@@ -48,6 +55,13 @@ them) so its `derive_effect_key(...)` matches the host's recomputation (spec §8
 - callable **at most once** per activation; a second call raises and fails the run;
 - the host validates `request` against the declared gateway-stage request schema
   before dispatch, and the result against the result schema before returning it;
+- when the `request` contains tainted content, the host MUST apply taint markers
+  to the result's string fields before returning it — model output derived from
+  hostile input is itself hostile-derived (spec §8.2 transitivity). The result
+  inherits the trust of the request's most-hostile input, with the derivation
+  chain appended with `"gateway"`; the library helper
+  `chip.taint.taint_gateway_result(result, parent_taint)` does exactly this
+  (string leaves wrapped, numbers/bools/None left bare, structure preserved);
 - for a `deterministic`-class chip the host passes a gateway that always raises;
 - in fixture/eval mode the host substitutes the fixture's canned result — the
   implementation cannot tell the difference and must not try;
@@ -73,6 +87,12 @@ Rules the host enforces (not the implementation's honor system):
   content in instruction position;
 - effect idempotency keys must be host-recomputed via `chip.envelopes.derive_effect_key`
   and match the implementation's claim;
+- effect `judgmentReceiptRef` back-fill: an effect request is constructed before
+  the run's judgment receipt exists, so the implementation MAY set
+  `judgmentReceiptRef` to the sentinel `"pending"` (`chip.envelopes.PENDING_RECEIPT_REF`).
+  The host MUST back-fill the real receipt reference before persisting or
+  dispatching the effect; a dispatched effect still carrying `"pending"` is a host
+  conformance violation (`chip.conformance` `check_dispatched_effects_carry_receipt_refs`);
 - authority: each effect's class is checked against the effective ceiling
   (chip ∩ circuit ∩ binding ∩ host ∩ approval), fail closed;
 - budgets/limits (`limits.*`) are metered by the host clock and accounting, not

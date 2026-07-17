@@ -206,6 +206,7 @@ class Contract:
     inputs: tuple[Port, ...]
     outputs: tuple[Port, ...]
     effects: tuple[EffectDecl, ...]
+    instruction_fields: tuple[str, ...] = ()
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Contract:
@@ -216,11 +217,25 @@ class Contract:
             raise ManifestError(f"{ctx}: at least one input port is required")
         if not outputs:
             raise ManifestError(f"{ctx}: at least one output port is required")
+        # Additional instruction-position field names for this chip's outputs
+        # (§8.2). A host enforces the UNION of chip.taint.DEFAULT_INSTRUCTION_KEYS
+        # and these. Must be a list of non-empty strings.
+        raw_fields = data.get("instructionFields", [])
+        if not isinstance(raw_fields, list):
+            raise ManifestError(f"{ctx}.instructionFields must be a list of strings")
+        instruction_fields = []
+        for f in raw_fields:
+            if not isinstance(f, str) or not f.strip():
+                raise ManifestError(
+                    f"{ctx}.instructionFields entries must be non-empty strings, got {f!r}"
+                )
+            instruction_fields.append(f)
         return cls(
             promise=_require(data, "promise", ctx),
             inputs=inputs,
             outputs=outputs,
             effects=tuple(EffectDecl.from_dict(e) for e in data.get("effects", [])),
+            instruction_fields=tuple(instruction_fields),
         )
 
 

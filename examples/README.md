@@ -33,7 +33,7 @@ two-chip linear circuit, runnable in a disposable, credential-free environment.
   unique lineage, with a stable idempotency key. Refuses to launder untainted
   evidence.
 - **`circuits/publication-triage.json`** — the linear composition wiring
-  `attention.finding → recommend.finding` by exact schema ref, with a `recommend`
+  `attention.finding → recommend.finding` by exact schema ref, with a `synthesize`
   authority ceiling and a human decision point on `recommend-research`.
 
 ## What the pilot demonstrates
@@ -74,5 +74,5 @@ observe`, its honest ceiling. This does **not** cap the downstream
 `bounded-recommendation` chip: authority is computed **per effect-requesting
 chip** (§12). `validate_circuit` returns a per-chip effective-ceiling map — the
 sensing chip resolves to `observe`, the recommendation chip to the circuit's
-`recommend` ceiling — so a low upstream ceiling never denies the downstream
+`synthesize` ceiling — so a low upstream ceiling never denies the downstream
 effect the pilot exists to make.

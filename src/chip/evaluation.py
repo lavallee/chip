@@ -9,6 +9,15 @@ capped at ``observe`` until its held-out suite passes, and — critically — a
 profile alias MUST NOT silently inherit a result from the model it previously
 resolved to. This module keys the ledger on the *full* tuple, so no alias
 resolution or partial match can smuggle in stale evidence.
+
+Canned vs. live honesty: a fixture-canned evaluation validates the deterministic
+envelope and records a tuple whose ``served_model`` is the canned marker; it does
+NOT evaluate a live model tuple. Lifting a live binding above ``observe`` requires
+the held-out suite to run against the *live* gateway, so the recorded tuple
+matches what activation will actually compute. The observe cap is binding-level:
+a gateway-bearing binding whose tuple is unevaluated is capped at ``observe`` for
+*every* run, including runs where the implementation happens not to invoke the
+gateway (the cap is not decided per-run).
 """
 
 from __future__ import annotations

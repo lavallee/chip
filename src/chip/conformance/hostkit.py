@@ -9,6 +9,8 @@ then exercise the behaviours the spec says a conforming host MUST have:
 * at-least-once delivery yields at most one effect, with a stable target-side
   dedup key that survives a cursor reset (§8.3, §9, §22);
 * pause and revoke each write a receipt (§12, §22);
+* every dispatched/pending effect references a real (non-``"pending"``) judgment
+  receipt present in the run (§8.3, §13);
 * an unevaluated tuple is capped at ``observe`` (§10.2); and
 * an undeclared capability is denied (§14).
 
@@ -221,6 +223,52 @@ def check_unevaluated_tuple_capped_at_observe(driver: HostDriver, scenario: Scen
     ), "unevaluated tuple executed an effect above observe (§10.2)"
 
 
+def _receipt_ids(report: RunReport) -> set[str]:
+    """The set of receipt identifiers a run exposes.
+
+    A receipt is identified by an explicit ``id`` field when present, otherwise
+    by its ``coordinates.run`` (the run id every receipt binds, §13). Both are
+    admitted so a host can reference either.
+    """
+    ids: set[str] = set()
+    for r in report.receipts:
+        rid = r.get("id")
+        if rid:
+            ids.add(str(rid))
+        run = r.get("coordinates", {}).get("run")
+        if run:
+            ids.add(str(run))
+    return ids
+
+
+def check_dispatched_effects_carry_receipt_refs(driver: HostDriver, scenario: Scenario) -> None:
+    """Every dispatched/pending effect must reference a real judgment receipt (§8.3).
+
+    An :class:`~chip.envelopes.EffectRequest` may be constructed with the
+    ``"pending"`` sentinel for ``judgmentReceiptRef`` before the run's receipt
+    exists, but the host MUST back-fill the real reference before dispatch. After
+    a positive activation, every dispatched (and proposed/pending) effect's
+    ``judgmentReceiptRef`` MUST be a non-empty, non-``"pending"`` reference that
+    matches a receipt id present in the run's receipts.
+    """
+    iid = driver.install(scenario.circuit, scenario.binding)
+    report = driver.activate(iid, scenario.positive_signal)
+    receipt_ids = _receipt_ids(report)
+    dispatched = [*report.effects_executed, *report.effect_requests]
+    for eff in dispatched:
+        ref = eff.get("judgmentReceiptRef") or eff.get("judgment_receipt_ref")
+        assert ref not in (None, "", "pending"), (
+            f"a dispatched/pending effect carries judgmentReceiptRef {ref!r}; the host "
+            "MUST back-fill the real receipt reference before dispatch — an empty or "
+            "'pending' ref is a conformance violation (§8.3)"
+        )
+        assert ref in receipt_ids, (
+            f"effect judgmentReceiptRef {ref!r} matches no receipt id in the run's "
+            f"receipts {sorted(receipt_ids)}; it must reference a receipt this run "
+            "actually emitted (§8.3, §13)"
+        )
+
+
 def check_undeclared_capability_denied(driver: HostDriver, scenario: Scenario) -> None:
     """An undeclared capability must be unavailable to the run (§14)."""
     iid = driver.install(scenario.circuit, scenario.binding)
@@ -245,6 +293,7 @@ ALL_CHECKS = (
     check_duplicate_produces_no_effects,
     check_invalid_judgment_fails_closed,
     check_at_least_once_single_effect,
+    check_dispatched_effects_carry_receipt_refs,
     check_pause_and_revoke_produce_receipts,
     check_unevaluated_tuple_capped_at_observe,
     check_undeclared_capability_denied,

@@ -5,7 +5,7 @@
   "description": "Two-chip linear pilot: attention (sense + judge materiality) -> bounded recommendation (rate-limited, human-gated effect request). Reference circuit for chip-spec 20.1.",
 
   "activationSignalType": "publication",
-  "authorityCeiling": "recommend",
+  "authorityCeiling": "synthesize",
 
   "chips": [
     {

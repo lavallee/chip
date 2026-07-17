@@ -92,6 +92,26 @@ def test_bad_api_version_rejected(publication_attention_manifest):
         load_manifest(publication_attention_manifest)
 
 
+def test_instruction_fields_default_empty(publication_attention_manifest):
+    m = load_manifest(publication_attention_manifest)
+    assert m.contract.instruction_fields == ()
+
+
+def test_instruction_fields_parsed(publication_attention_manifest):
+    publication_attention_manifest["contract"]["instructionFields"] = ["rationale", "summary"]
+    m = load_manifest(publication_attention_manifest)
+    assert m.contract.instruction_fields == ("rationale", "summary")
+
+
+def test_instruction_fields_rejects_non_string(publication_attention_manifest):
+    publication_attention_manifest["contract"]["instructionFields"] = ["ok", ""]
+    with pytest.raises(ManifestError):
+        load_manifest(publication_attention_manifest)
+    publication_attention_manifest["contract"]["instructionFields"] = "notalist"
+    with pytest.raises(ManifestError):
+        load_manifest(publication_attention_manifest)
+
+
 # ---- schema ref split (file vs. version) ----
 
 

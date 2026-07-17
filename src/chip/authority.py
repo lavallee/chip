@@ -54,8 +54,9 @@ class EffectClass(IntEnum):
         """Parse a spec effect-class string into an :class:`EffectClass`.
 
         Accepts the canonical labels and the legacy alias ``"recommend"``
-        (→ :data:`SYNTHESIZE`). Raises :class:`AuthorityError` on anything else
-        so an unknown class fails closed rather than silently widening.
+        (→ :data:`SYNTHESIZE`) — a legacy alias, kept for readability of older
+        manifests. Raises :class:`AuthorityError` on anything else so an unknown
+        class fails closed rather than silently widening.
         """
         if isinstance(value, cls):
             return value
@@ -64,7 +65,7 @@ class EffectClass(IntEnum):
                 f"effect class must be a string, got {type(value).__name__}"
             )
         key = value.strip().lower()
-        if key == "recommend":  # legacy alias, retained in manifest text
+        if key == "recommend":  # legacy alias, kept for readability of older manifests
             return cls.SYNTHESIZE
         for member in cls:
             if member.label == key:
@@ -75,7 +76,8 @@ class EffectClass(IntEnum):
         )
 
 
-# Public alias retained so manifest text using "recommend" round-trips.
+# Legacy alias, kept for readability of older manifests; "recommend" round-trips
+# to SYNTHESIZE. Retained permanently.
 RECOMMEND_ALIAS = "recommend"
 
 

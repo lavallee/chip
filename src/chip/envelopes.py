@@ -24,14 +24,22 @@ from chip.errors import EnvelopeError
 # Effect-key scheme prefix; version it so a future derivation change is legible.
 _EFFECT_KEY_PREFIX = "cek1-"
 
-# Inputs that look like run ids or mutable state are rejected by
-# derive_effect_key. A bare UUID, or any token carrying a run/attempt/state
-# marker, is unstable across retries and migrations and must never leak in.
-_UUID_RE = re.compile(
-    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
-)
-_UNSTABLE_TOKEN_RE = re.compile(
-    r"(?:^|[^a-z])(run|attempt|state|session)[-_:#=]", re.IGNORECASE
+# Sentinel value permitted for ``judgmentReceiptRef`` at EffectRequest
+# construction time, before the run's judgment receipt exists (§8.3). The HOST
+# MUST back-fill the real receipt reference before persisting or dispatching the
+# effect; a dispatched effect still carrying this value is a host conformance
+# violation.
+PENDING_RECEIPT_REF = "pending"
+
+# A run/attempt marker in a key input is unstable across retries and migrations
+# and must never leak in. The guard is deliberately narrow: it rejects ONLY
+# explicit run/attempt markers — the word-boundary forms `run-`, `run:`,
+# `attempt-`, `attempt:`, `/runs/`, and `/attempts/`. It does NOT reject
+# UUID-shaped values, because stable source lineage keys (message ids, entry ids)
+# legitimately embed UUIDs. This regex is a best-effort tripwire for the obvious
+# mistake, not the enforcement boundary (§8.3).
+_RUN_MARKER_RE = re.compile(
+    r"(?:^|[^0-9a-z])(?:run|attempt)[-:]|/(?:runs|attempts)/", re.IGNORECASE
 )
 
 
@@ -251,6 +259,14 @@ class EffectRequest:
     Model text never executes an effect directly; it constructs one of these and
     hands it to the host, which decides authorisation and dispatches through an
     adapter. ``idempotency_key`` must come from :func:`derive_effect_key`.
+
+    ``judgment_receipt_ref`` presents a chicken-and-egg: the request is built
+    *before* the run's judgment receipt exists. The sentinel
+    :data:`PENDING_RECEIPT_REF` (``"pending"``) is therefore allowed at
+    construction. The HOST MUST back-fill the real receipt reference before
+    persisting or dispatching the effect; a dispatched effect still carrying
+    ``"pending"`` is a host conformance violation (see
+    :func:`chip.conformance.hostkit.check_dispatched_effects_carry_receipt_refs`).
     """
 
     type: str
@@ -315,17 +331,18 @@ class EffectRequest:
 
 
 def _reject_unstable(name: str, value: str) -> None:
-    """Reject a key input that looks like a run id or mutable-state token."""
+    """Reject a key input carrying an explicit run/attempt marker.
+
+    Lineage keys are source-stable identifiers and may legitimately embed a
+    UUID (message id, entry id), so UUID-shaped values are accepted. Only the
+    explicit run/attempt marker forms are rejected — a best-effort tripwire, not
+    the enforcement boundary (§8.3).
+    """
     if not isinstance(value, str) or not value.strip():
         raise EnvelopeError(f"derive_effect_key: {name} must be a non-empty stable string")
-    if _UUID_RE.match(value.strip()):
+    if _RUN_MARKER_RE.search(value):
         raise EnvelopeError(
-            f"derive_effect_key: {name}={value!r} looks like a run id (UUID); "
-            "the key must derive only from stable lineage, not run identity (§8.3)"
-        )
-    if _UNSTABLE_TOKEN_RE.search(value):
-        raise EnvelopeError(
-            f"derive_effect_key: {name}={value!r} carries a run/attempt/state marker; "
+            f"derive_effect_key: {name}={value!r} carries a run/attempt marker; "
             "the key MUST NOT include a run id or mutable state (§8.3)"
         )
 
@@ -344,10 +361,14 @@ def derive_effect_key(
     identical across retries, cursor resets, and state migrations — the property
     the target owner relies on as the *final* deduplication authority.
 
-    Each input is validated as a stable string; a run-id-shaped or
-    state-marked value raises :class:`EnvelopeError`. The four fields are joined
-    with a NUL separator (which cannot appear in the inputs) so distinct field
-    boundaries can never collide.
+    Lineage keys are source-stable identifiers and MAY embed a UUID (message
+    id, entry id); such values are accepted. Hosts MUST NOT pass run-scoped ids.
+    Each input is validated as a non-empty string; only a value carrying an
+    explicit run/attempt marker raises :class:`EnvelopeError` — the guard is a
+    best-effort tripwire, not the enforcement (the target owner is the final
+    dedup authority, §8.3). The four fields are joined with a NUL separator
+    (which cannot appear in the inputs) so distinct field boundaries can never
+    collide.
     """
     _reject_unstable("lineage_key", lineage_key)
     _reject_unstable("effect_type", effect_type)

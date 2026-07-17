@@ -69,7 +69,9 @@ def run(activation: dict[str, Any]) -> dict[str, Any]:
     state: dict[str, Any] = activation.get("state") or _empty_state()
     config: dict[str, Any] = activation.get("config") or {}
     gateway = activation["gateway"]
-    run_id = config.get("runId", "run-local")
+    # The host injects the run id at the top level of the activation (host
+    # execution contract); fall back to a config value / local default.
+    run_id = activation.get("run_id") or config.get("runId", "run-local")
 
     # --- normalize (deterministic) ---------------------------------------
     lineage = signal.get("lineage")
