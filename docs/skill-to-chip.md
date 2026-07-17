@@ -6,7 +6,12 @@ stay a skill). It operationalizes the classification exercise of spec §19.
 
 ## The distillation ladder
 
-A capability moves down a ladder as more of it earns a precise, testable form:
+The ladder is a set of stations, not a progression — the goal is not to
+move everything to the code end, it is to get every behavior to the RIGHT
+rung. Movement is bidirectional and evidence-driven. The tooling emphasizes
+rightward pathways only because the observed inertia runs the other way:
+behavior pools at the fat-skill end, where prose is frictionless to write
+and nothing pushes back.
 
 ```
 prose skill
@@ -32,11 +37,21 @@ Two paths reach the late rungs, and the §4.1 admission rule is the switch:
   state** never enters the chip rungs at all — it distills straight from prose
   to *thin skill + CLI*. Enforcement-shaped behavior usually wants to be a
   tool first; that is success, not a failed decomposition.
-- A behavior that satisfies admission passes through chip-hood and may later
-  **demote** to *thin skill + CLI* when the governance envelope stops paying
+- A behavior that satisfies admission settles at a chip rung and may later
+  **migrate** to *thin skill + CLI* when the governance envelope stops paying
   for itself — this is a destination for the `retire` lifecycle event, not
   just deletion: the deterministic code survives as a tool, and the chip's
-  fixtures survive as the CLI's ordinary test suite.
+  fixtures survive as the CLI's ordinary test suite. Migration runs the other
+  way too: a CLI that keeps needing standing attention, receipts, or
+  authority gating has outgrown its rung and belongs at a chip station.
+
+The chip rungs are the ladder's **governed holding areas**: places where a
+behavior can sit safely between prose and bare code while evidence about its
+true shape accumulates. A chip's receipts and evaluations are not just
+safety machinery — they are the placement data. Call frequency, quiet rates,
+judgment-stage value, and authority usage are exactly what decide whether
+the behavior migrates further, stays, or returns toward prose when a
+stronger model reclaims it.
 
 ## The per-behavior test
 
