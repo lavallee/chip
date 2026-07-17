@@ -4,6 +4,8 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-07-17
+
 Unreleased 0.2.0 work. Tracks spec 0.5.0: the delegation profile, the
 three-layer resolution split, and two non-contractual manifest surfaces. All
 additive; the schema identifier is unchanged (`chip.spec/v0alpha1`).
