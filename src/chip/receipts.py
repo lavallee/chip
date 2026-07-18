@@ -237,6 +237,7 @@ def validate_receipt(data: dict[str, Any]) -> None:
     if not isinstance(data, dict):
         raise ReceiptError(f"receipt must be an object, got {type(data).__name__}")
     schema = data.get("schema")
+    required: tuple[str, ...]
     if schema == ATTENTION_SCHEMA:
         required = _ATTENTION_REQUIRED
     elif schema == JUDGMENT_SCHEMA:

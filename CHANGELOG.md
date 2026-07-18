@@ -4,6 +4,15 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Added
+
+- Source-commissioned candidate identity (`candidateId`, `sourceId`, and exact
+  `sourceRevision`), separate counterexample references, and explicit source
+  limits.
+- `commission_candidate` and content-addressed
+  `chip.candidate-receipt/v1` custody receipts. Exact replay is idempotent and
+  commissioned tallies union occurrence references across source revisions.
+
 ## [0.2.0] — 2026-07-17
 
 Unreleased 0.2.0 work. Tracks spec 0.5.0: the delegation profile, the

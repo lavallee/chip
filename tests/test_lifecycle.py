@@ -8,8 +8,8 @@ from chip.errors import LifecycleError
 from chip.lifecycle import LifecycleEvent, validate_lifecycle_event
 
 
-def _event(**over) -> dict:
-    base = {
+def _event(**over: object) -> dict[str, object]:
+    base: dict[str, object] = {
         "event": "mint",
         "at": "2026-07-17T00:00:00Z",
         "operator": "owner:desk",
