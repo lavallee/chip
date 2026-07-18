@@ -69,16 +69,16 @@ class FakeHost:
         stype = signal.get("type")
 
         if stype == "quiet":
-            receipt = build_attention_receipt(
+            attention_receipt = build_attention_receipt(
                 coords, run_status="completed", semantic_outcome="quiet",
                 terminal_reason="no-new-report",
             )
-            return RunReport(run_id=run_id, receipts=[receipt.to_dict()],
+            return RunReport(run_id=run_id, receipts=[attention_receipt.to_dict()],
                              terminal_reason="no-new-report", run_status="completed")
 
         if stype == "invalid":
             # Canned malformed gateway result: validation rejects it -> fail closed.
-            receipt = build_judgment_receipt(
+            judgment_receipt = build_judgment_receipt(
                 coords, run_status="failed", semantic_outcome="finding-invalid",
                 terminal_reason="gateway-result-invalid",
                 digests={"contract": "sha:c", "implementation": "sha:i", "policy": "sha:p"},
@@ -89,7 +89,7 @@ class FakeHost:
                 effects={"proposed": [], "approved": [], "rejected": [], "executed": []},
                 state_version_before="v1", state_version_after="v1",
             )
-            return RunReport(run_id=run_id, receipts=[receipt.to_dict()],
+            return RunReport(run_id=run_id, receipts=[judgment_receipt.to_dict()],
                              terminal_reason="gateway-result-invalid", run_status="failed")
 
         # Positive / duplicate: build the stable effect key from lineage.
@@ -104,17 +104,17 @@ class FakeHost:
         }
         if key in state.seen_effect_keys:
             # Target-side dedup: no new effect, compact attention receipt.
-            receipt = build_attention_receipt(
+            duplicate_receipt = build_attention_receipt(
                 coords, run_status="completed", semantic_outcome="duplicate",
                 terminal_reason="duplicate-lineage",
                 effect_decision={"deduped": True, "idempotencyKey": key},
             )
-            return RunReport(run_id=run_id, receipts=[receipt.to_dict()],
+            return RunReport(run_id=run_id, receipts=[duplicate_receipt.to_dict()],
                              effect_requests=[request], effects_executed=[],
                              terminal_reason="duplicate-lineage", run_status="completed")
 
         state.seen_effect_keys.add(key)
-        receipt = build_judgment_receipt(
+        accepted_receipt = build_judgment_receipt(
             coords, run_status="completed", semantic_outcome="finding-valid",
             terminal_reason="finding",
             digests={"contract": "sha:c", "implementation": "sha:i", "policy": "sha:p"},
@@ -124,7 +124,7 @@ class FakeHost:
                      "rejected": [], "executed": [request]},
             state_version_before="v1", state_version_after="v2",
         )
-        return RunReport(run_id=run_id, receipts=[receipt.to_dict()],
+        return RunReport(run_id=run_id, receipts=[accepted_receipt.to_dict()],
                          effect_requests=[request], effects_executed=[request],
                          terminal_reason="finding", run_status="completed")
 

@@ -48,6 +48,43 @@ An append-only `candidates.jsonl`. Each line is one candidate:
   the half that is impossible to reconstruct after the fact.
 - **`count`** / **`notedBy`** — the running occurrence tally and who filed it.
 
+## Source-commissioned candidates
+
+External finding systems can use the same ledger without making replay look
+like recurrence. A commissioned row adds:
+
+```json
+{
+  "candidateId": "candidate:stable-across-source-revisions",
+  "sourceId": "milton.finding=fnd_123",
+  "sourceRevision": "milton.finding-revision=fnr_456",
+  "counterexampleRefs": ["fixture:negative:clean-retry"],
+  "sourceLimits": {
+    "coverage": 0.75,
+    "coverageGaps": ["one harness unavailable"],
+    "expiresAt": "2026-08-01T00:00:00Z"
+  }
+}
+```
+
+Use `commission_candidate`, not `append_candidate`, for these rows. It requires
+the three identity fields together, sorted unique reference lists, `count`
+equal to the number of occurrence references, and explicit source limits. The
+same candidate id cannot change source or shape. The same source revision
+cannot change content.
+
+Commissioning writes a content-addressed `chip.candidate-receipt/v1` to
+`candidate-receipts.jsonl` (or an explicit receipt path). Replaying the exact
+revision returns the same receipt and appends nothing. `tally` unions occurrence
+references across commissioned revisions, so a later source snapshot cannot
+recount an earlier occurrence. Counterexamples and negative/exception fixture
+references remain distinct inputs to later held-out evaluation; they do not
+reduce or increase the occurrence tally.
+
+The candidate ledger remains Chip-owned. The receipt ledger is the public
+interop surface consumers can ingest without reading private candidate or
+fixture material.
+
 ## The loop
 
 1. **Capture** during normal work — a thin standing instruction to notice a

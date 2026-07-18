@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from chip.candidates import Candidate, append_candidate, load_candidates, tally
+from chip.candidates import (
+    Candidate,
+    append_candidate,
+    commission_candidate,
+    load_candidates,
+    tally,
+)
 from chip.errors import CandidateError
 
 
@@ -17,6 +23,27 @@ def _cand(**over) -> dict:
         "count": 1,
         "notedBy": "agent:build-loop",
     }
+    base.update(over)
+    return base
+
+
+def _commissioned(**over) -> dict:
+    base = _cand(
+        candidateId="candidate:milton:fnd-1",
+        sourceId="milton.finding=fnd-1",
+        sourceRevision="milton.finding-revision=fnr-1",
+        occurrenceRefs=["event:occurrence-1", "event:occurrence-2"],
+        counterexampleRefs=["fixture:negative:counter-1"],
+        fixtureRefs=["fixture:exception:exception-1", "fixture:positive:positive-1"],
+        sourceLimits={
+            "coverage": 0.75,
+            "coverageGaps": ["one source was unavailable"],
+            "contentPolicy": "metadata-only",
+            "expiresAt": "2026-08-01T00:00:00Z",
+        },
+        count=2,
+        notedBy="milton:failure-motifs/v1",
+    )
     base.update(over)
     return base
 
@@ -80,3 +107,55 @@ def test_tally_sums_by_shape(tmp_path):
     append_candidate(ledger, _cand(shape="shape B", count=1))
     totals = tally(load_candidates(ledger))
     assert totals == {"shape A": 5, "shape B": 1}
+
+
+def test_commission_is_idempotent_and_returns_stable_receipt(tmp_path):
+    ledger = tmp_path / "candidates.jsonl"
+    first = commission_candidate(ledger, _commissioned())
+    replay = commission_candidate(ledger, _commissioned())
+
+    assert replay == first
+    assert len(load_candidates(ledger)) == 1
+    receipts = (tmp_path / "candidate-receipts.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(receipts) == 1
+    assert first.to_dict()["semanticOutcome"] == "candidate-recorded"
+    assert first.counterexample_refs == ("fixture:negative:counter-1",)
+    assert first.fixture_refs == (
+        "fixture:exception:exception-1",
+        "fixture:positive:positive-1",
+    )
+
+
+def test_commission_rejects_changed_content_for_one_source_revision(tmp_path):
+    ledger = tmp_path / "candidates.jsonl"
+    commission_candidate(ledger, _commissioned())
+
+    with pytest.raises(CandidateError, match="other content"):
+        commission_candidate(ledger, _commissioned(shape="a silently changed promise"))
+
+
+def test_commissioned_tally_counts_unique_occurrences_across_revisions(tmp_path):
+    ledger = tmp_path / "candidates.jsonl"
+    commission_candidate(ledger, _commissioned())
+    commission_candidate(
+        ledger,
+        _commissioned(
+            sourceRevision="milton.finding-revision=fnr-2",
+            occurrenceRefs=["event:occurrence-2", "event:occurrence-3"],
+            count=2,
+        ),
+    )
+
+    assert len(load_candidates(ledger)) == 2
+    assert tally(load_candidates(ledger)) == {
+        "when a dependency range changes, propose a tested update": 3
+    }
+
+
+def test_commission_requires_complete_sorted_identity_and_limits():
+    with pytest.raises(CandidateError, match="must all be non-empty"):
+        Candidate.from_dict(_commissioned(sourceRevision=""))
+    with pytest.raises(CandidateError, match="sorted and unique"):
+        Candidate.from_dict(_commissioned(occurrenceRefs=["z", "a"], count=2))
+    with pytest.raises(CandidateError, match="sourceLimits"):
+        Candidate.from_dict(_commissioned(sourceLimits=None))

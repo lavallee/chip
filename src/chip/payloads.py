@@ -18,7 +18,7 @@ from chip.errors import EnvelopeError
 def jsonschema_available() -> bool:
     """Return whether the optional ``jsonschema`` dependency is importable."""
     try:
-        import jsonschema  # noqa: F401
+        import jsonschema  # type: ignore[import-untyped]  # noqa: F401
     except ImportError:
         return False
     return True
@@ -32,7 +32,7 @@ def validate_payload(document: Any, schema: dict[str, Any]) -> None:
     the document does not conform (the message carries the offending path).
     """
     try:
-        import jsonschema
+        import jsonschema  # type: ignore[import-untyped]
     except ImportError as exc:  # pragma: no cover - exercised only without the extra
         raise EnvelopeError(
             "validate_payload requires the optional 'jsonschema' extra; "

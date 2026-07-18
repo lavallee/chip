@@ -102,7 +102,10 @@ _LAZY: dict[str, tuple[str, str]] = {
     "LIFECYCLE_EVENTS": ("chip.lifecycle", "LIFECYCLE_EVENTS"),
     # candidate ledger
     "Candidate": ("chip.candidates", "Candidate"),
+    "CandidateReceipt": ("chip.candidates", "CandidateReceipt"),
+    "CANDIDATE_RECEIPT_SCHEMA": ("chip.candidates", "CANDIDATE_RECEIPT_SCHEMA"),
     "append_candidate": ("chip.candidates", "append_candidate"),
+    "commission_candidate": ("chip.candidates", "commission_candidate"),
     "load_candidates": ("chip.candidates", "load_candidates"),
     "tally": ("chip.candidates", "tally"),
     # fixtures
