@@ -29,7 +29,7 @@ from typing import Any
 
 from chip.envelopes import PENDING_RECEIPT_REF, derive_effect_key
 from chip.errors import EnvelopeError
-from chip.taint import is_tainted
+from chip.tainting import is_tainted
 
 CHIP_ID = "https://github.com/lavallee/chip/tree/main/examples/bounded-recommendation"
 EFFECT_TYPE = "recommend-research"

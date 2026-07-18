@@ -83,7 +83,7 @@ them) so its `derive_effect_key(...)` matches the host's recomputation (spec §8
   hostile input is itself hostile-derived (spec §8.2 transitivity). The result
   inherits the trust of the request's most-hostile input, with the derivation
   chain appended with `"gateway"`; the library helper
-  `chip.taint.taint_gateway_result(result, parent_taint)` does exactly this
+  `chip.tainting.taint_gateway_result(result, parent_taint)` does exactly this
   (string leaves wrapped, numbers/bools/None left bare, structure preserved);
 - for a `deterministic`-class chip the host passes a gateway that always raises;
 - in fixture/eval mode the host substitutes the fixture's canned result — the

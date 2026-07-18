@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from chip.errors import EnvelopeError
-from chip.taint import (
+from chip.tainting import (
     DEFAULT_INSTRUCTION_KEYS,
     assert_untainted_for_instructions,
     is_tainted,

@@ -228,7 +228,7 @@ class Contract:
         if not outputs:
             raise ManifestError(f"{ctx}: at least one output port is required")
         # Additional instruction-position field names for this chip's outputs
-        # (§8.2). A host enforces the UNION of chip.taint.DEFAULT_INSTRUCTION_KEYS
+        # (§8.2). A host enforces the UNION of chip.tainting.DEFAULT_INSTRUCTION_KEYS
         # and these. Must be a list of non-empty strings.
         raw_fields = data.get("instructionFields", [])
         if not isinstance(raw_fields, list):

@@ -93,3 +93,37 @@ regresses the held-out suite is simply not taken.
 The goal is never to reclassify every useful tool as a chip, nor to force
 dialogic behavior into a manifest. It is to let each behavior settle at the
 lowest rung a fixture can justify — and to leave the rest, honestly, as a skill.
+
+## Worked boundary: design taste and DES
+
+A design skill is not chip-shaped merely because it has a rubric or can produce
+code. Brief interpretation, audience negotiation, selecting a surface mode,
+making a justified system exception, and composing a visual direction remain
+dialogic skill behavior. Deterministic token checks, overflow checks, browser
+capture, and receipt generation are tools. Spindle composes and binds the skill;
+neither activity needs a chip runtime.
+
+A **design-lineage observer** could qualify later, but only if practice produces
+a real standing relationship and cross-run state. Its narrow promise might be:
+
+> Observe receipted DES structural fingerprints for unrelated expressive
+> projects and recommend one bounded variation when the same fingerprint repeats
+> beyond policy limits.
+
+That candidate would need:
+
+- an input port containing DES receipt references, surface mode, design profile,
+  structural fingerprint, and product identity;
+- installation-scoped state for prior fingerprints and recommendation effect
+  keys;
+- a quiet result when repetition is below threshold or consistency is desired;
+- no code edit, skill bind, merge, or publication effect;
+- fixtures where similar operator layouts are correct and repeated marketing
+  layouts are not; and
+- evaluation bound to implementation digest, DES profile, requested and served
+  model, harness, and declared seeing/browser capabilities.
+
+Until repeated receipts demonstrate that this standing observer pays for its
+state and governance, keep structural memory in product-local DES records and
+the assessment loop in Projector/Spindle. Minting a chip before that evidence
+would turn a one-shot design practice into unnecessary runtime machinery.

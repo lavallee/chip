@@ -24,7 +24,7 @@ from __future__ import annotations
 from typing import Any
 
 from chip.errors import EnvelopeError
-from chip.taint import is_tainted, propagate, quote_span, taint
+from chip.tainting import is_tainted, propagate, quote_span, taint
 
 CHIP_ID = "https://github.com/lavallee/chip/tree/main/examples/publication-attention"
 

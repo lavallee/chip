@@ -4,6 +4,15 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Fixed
+
+- Renamed the internal `chip.taint` module to `chip.tainting`: importing the
+  submodule used to shadow the package's exported `taint()` function
+  (Python binds the submodule to the package attribute on import, silently
+  replacing the lazy export). Public `chip.taint(...)` and every other
+  package-level export are unchanged; only direct submodule imports
+  (`from chip.taint import ...`) must become `from chip.tainting import ...`.
+
 ### Added
 
 - Source-commissioned candidate identity (`candidateId`, `sourceId`, and exact

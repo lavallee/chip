@@ -34,12 +34,12 @@ from chip.errors import EnvelopeError
 from chip.fixtures import validate_fixture_coverage
 from chip.manifest import load_chip_package
 from chip.payloads import jsonschema_available, validate_payload
-from chip.taint import (
+from chip.tainting import (
     assert_untainted_for_instructions,
     is_tainted,
     taint_gateway_result,
 )
-from chip.taint import (
+from chip.tainting import (
     taint as taint_value,
 )
 
