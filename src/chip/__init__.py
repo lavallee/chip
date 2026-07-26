@@ -70,13 +70,17 @@ _LAZY: dict[str, tuple[str, str]] = {
     # state
     "StateContract": ("chip.state", "StateContract"),
     "Cursor": ("chip.state", "Cursor"),
-    # receipts
-    "AttentionReceipt": ("chip.receipts", "AttentionReceipt"),
-    "JudgmentReceipt": ("chip.receipts", "JudgmentReceipt"),
+    # receipts — one run-receipt shape (§13) + the outcome receipt (§13.3)
+    "Receipt": ("chip.receipts", "Receipt"),
+    "OutcomeReceipt": ("chip.receipts", "OutcomeReceipt"),
     "Coordinates": ("chip.receipts", "Coordinates"),
+    "Authority": ("chip.receipts", "Authority"),
     "validate_receipt": ("chip.receipts", "validate_receipt"),
-    "build_attention_receipt": ("chip.receipts", "build_attention_receipt"),
-    "build_judgment_receipt": ("chip.receipts", "build_judgment_receipt"),
+    "validate_outcome": ("chip.receipts", "validate_outcome"),
+    "build_receipt": ("chip.receipts", "build_receipt"),
+    "build_outcome_receipt": ("chip.receipts", "build_outcome_receipt"),
+    "TERMINAL_REASONS": ("chip.receipts", "TERMINAL_REASONS"),
+    "AUTHORITY_REASONS": ("chip.receipts", "AUTHORITY_REASONS"),
     # evaluation
     "EvaluatedTuple": ("chip.evaluation", "EvaluatedTuple"),
     "EvaluationLedger": ("chip.evaluation", "EvaluationLedger"),
@@ -112,11 +116,11 @@ _LAZY: dict[str, tuple[str, str]] = {
     "Fixture": ("chip.fixtures", "Fixture"),
     "load_fixtures": ("chip.fixtures", "load_fixtures"),
     "validate_fixture_coverage": ("chip.fixtures", "validate_fixture_coverage"),
-    # datasheet (a derived comprehension surface — projection, never authority)
-    "Datasheet": ("chip.datasheet", "Datasheet"),
-    "build_datasheet": ("chip.datasheet", "build_datasheet"),
-    "render_markdown": ("chip.datasheet", "render_markdown"),
-    "render_html": ("chip.datasheet", "render_html"),
+    # packaging, resolution, preflight (§16)
+    "package_digest": ("chip.packaging", "package_digest"),
+    "split_entrypoint": ("chip.packaging", "split_entrypoint"),
+    "preflight": ("chip.packaging", "preflight"),
+    "PreflightReport": ("chip.packaging", "PreflightReport"),
     # optional payload validation (guarded jsonschema)
     "validate_payload": ("chip.payloads", "validate_payload"),
     "jsonschema_available": ("chip.payloads", "jsonschema_available"),

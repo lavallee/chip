@@ -6,6 +6,77 @@ implementation.
 
 Schema identifier: `chip.spec/v0alpha1`.
 
+## 0.6.0 — 2026-07-25
+
+The first edition shaped by production receipts rather than design intent. After
+148 run receipts and 170 host outcome records across two chips on one host, this
+release **removes surface**: fields that were required and always empty, a tier
+distinction that carried no information, a five-field authority record whose
+answer was always the same value, and six sections that no host implements.
+
+It is a **breaking** release. The schema identifier is unchanged
+(`chip.spec/v0alpha1`) but the receipt shape is not backward compatible.
+
+Removed:
+
+- **The two receipt tiers.** `chip.receipt/v0alpha1#attention` and
+  `…#judgment` collapse into one `chip.receipt/v0alpha1`. The tier described how
+  far a run got, which the optional blocks already say.
+- **`outcomeLinks`, `artifacts`, and `verifierResults`** from the run receipt.
+  Empty on 91 of 91 production judgment receipts; `verifierResults` carried the
+  same constant environment attestation every time.
+- **§17 (board projection), §19 (skill-package decomposition), §20 (reference
+  circuits), §22 (pilots), §23 (open questions), §24 (falsification)** — moved to
+  `docs/`, still public, no longer normative. Section numbers are retained as
+  pointers so existing cross-references stay valid. The spec is 1,383 → 1,148
+  lines and now contains only what a host must implement to interoperate.
+- **The datasheet generator** (927 lines, 20% of the reference library) moved to
+  the reference host. A datasheet projects host telemetry over a package; it is
+  not part of a portable contract, and it produced no artifacts in production.
+
+Changed:
+
+- **One receipt, required core plus optional blocks (§13).** The core is
+  coordinates, both outcome axes, terminal reason, contract/implementation
+  digests, effective authority, and timing. `inputs`, `state`, `stages`,
+  `gateway`, `decisions`, `effects`, and `cost` appear only when the run reached
+  them — absent, not empty.
+- **`terminalReason` is a closed vocabulary (§13.2).** Thirteen values, each
+  bound to the run status it may appear with. Production had drifted to freeform
+  strings including exception class names; two genuinely missing cases (an
+  exhausted gateway, and a gateway answer that fails validation) had been
+  collapsed into generic host failures and now have their own reasons.
+- **Authority is an effective ceiling plus one reason (§14).** Hosts recorded
+  five fields to express one outcome; in every live production run the answer was
+  `observe`. The derivation stays with the host; the receipt records the result.
+- **Receipts may not embed raw harness error text (§13).** A failure records a
+  typed reason plus a reference. One production failure had carried several
+  kilobytes of model output and schema-validation text in a decision field.
+
+Added:
+
+- **§13.3 Outcome receipts.** A run receipt says what a chip decided; it cannot
+  say whether the chip was right. An outcome receipt references a run, and
+  records the decision the host took, the independent floor it would have taken
+  without the chip, the downstream verdict, and whether the run was
+  counterfactually audited. The reference host already kept exactly this record
+  in a host-private file because the contract had nowhere to put it. Without
+  outcome receipts a chip can be evaluated but not calibrated.
+- **§16 Packaging, distribution, and resolution — now normative.** Was a "later
+  hypothesis" through 0.5; 100 of 170 consecutive production activations died on
+  package resolution or a library rename, so it is a contract now:
+  - **§16.1** package identity is a content digest, resolved from a host-owned
+    store — never a path into the authoring workspace;
+  - **§16.2** the entry point is declared in the manifest; a host may not depend
+    on the package's internal module layout, and the contract library's internal
+    module paths are not API;
+  - **§16.3** revision succession — replacing an implementation upgrades an
+    installation in place, preserving identity, cursor lineage, dedupe keys, and
+    effect keys. Only an *unexplained* digest change is an integrity violation;
+  - **§16.4** preflight in the execution environment, and a **dark installation**
+    obligation: a host must expose consecutive fail-soft fallbacks rather than
+    letting a chip's silence read as quiet operation.
+
 ## 0.5.0 — 2026-07-17
 
 Admits the **delegation profile** of the contract alongside the original

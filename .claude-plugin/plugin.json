@@ -1,0 +1,10 @@
+{
+  "name": "chip-contract",
+  "displayName": "chip — portable operational components",
+  "version": "0.3.0",
+  "description": "Teaches your agent the chip lifecycle: deciding whether a behavior should be a chip at all, authoring the package, building the fixture suite that gates its authority, installing it so it actually resolves, auditing for the silent failures, and closing the outcome loop so the chip can be calibrated rather than merely evaluated. Seven skills over the contract in spec 0.6.",
+  "author": { "name": "Marc Lavallee" },
+  "repository": "https://github.com/lavallee/chip",
+  "license": "MIT",
+  "keywords": ["chips", "circuits", "receipts", "authority", "operational", "contract", "portability"]
+}

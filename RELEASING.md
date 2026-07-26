@@ -34,6 +34,15 @@ Version bump rules:
    sed -i "s/VERSION = \"$OLD\"/VERSION = \"$NEW\"/" src/chip/version.py
    ```
 
+2b. **Re-sync the plugin skills tree.** `src/chip/skills/` is canonical and ships
+   with the package; `skills/` is the Claude Code plugin's copy.
+   ```bash
+   rm -rf skills && cp -r src/chip/skills skills
+   ```
+   `tests/test_plugin_skills.py` fails on any drift in either direction, so this
+   is checked rather than remembered. Bump `version` in
+   `.claude-plugin/plugin.json` to match.
+
 3. **Update `CHANGELOG.md`.** Add a new dated heading at the top:
    ```markdown
    ## [X.Y.Z] — YYYY-MM-DD

@@ -2,7 +2,7 @@
 
 Writes a full chip package to disk (chip.json + schemas + fixtures), loads it via
 load_chip_package, wires a two-chip linear circuit, derives a stable effect key,
-and builds both receipt tiers — the whole portable contract exercised once.
+and builds a receipt — the whole portable contract exercised once.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from chip.circuit import Circuit, validate_circuit
 from chip.envelopes import EffectRequest, Signal, derive_effect_key
 from chip.fixtures import validate_fixture_coverage
 from chip.manifest import load_chip_package, load_manifest, split_schema_ref
-from chip.receipts import Coordinates, build_judgment_receipt, validate_receipt
+from chip.receipts import Authority, Coordinates, build_receipt, validate_receipt
 
 
 def _write_schemas(pkg, schema_refs):
@@ -114,18 +114,19 @@ def test_circuit_and_effect_and_receipt_cohere(
     )
     assert EffectRequest.from_dict(effect.to_dict()) == effect
 
-    receipt = build_judgment_receipt(
+    receipt = build_receipt(
         Coordinates(run="run:1", installation="fabexp-abc12345-triage",
                     circuit=circuit.id, chip="press.new-report-triage", binding="bind:1"),
         run_status="completed",
         semantic_outcome="finding-valid",
-        terminal_reason="finding",
-        digests={"contract": "sha:c", "implementation": "sha256:aaaa", "policy": "sha:p"},
+        terminal_reason="finding-effect-proposed",
+        digests={"contract": "sha:c", "implementation": "sha256:aaaa"},
+        authority=Authority(effective_ceiling=ceiling.label, reason="binding-ceiling"),
         decisions={"validation": {"ok": True}, "dedupe": {"key": key},
-                   "budget": {"usd": 0.02}, "authority": {"ceiling": ceiling.label}},
+                   "budget": {"usd": 0.02}},
         effects={"proposed": [effect.to_dict()], "approved": [], "rejected": [],
                  "executed": []},
-        state_version_before="v1", state_version_after="v2",
+        state={"versionBefore": "v1", "versionAfter": "v2"},
         gateway={"requestId": "gw:1", "usage": {"tokensIn": 800, "tokensOut": 120}},
     )
     validate_receipt(receipt.to_dict())
