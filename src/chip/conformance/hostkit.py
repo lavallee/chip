@@ -26,7 +26,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
-from chip.receipts import ATTENTION_SCHEMA, JUDGMENT_SCHEMA
+from chip.receipts import RECEIPT_SCHEMA
 
 
 @dataclass(slots=True)
@@ -103,14 +103,17 @@ def _effect_keys(effects: list[dict[str, Any]]) -> list[str]:
     return keys
 
 
-def _last_receipt_schema(report: RunReport) -> str | None:
-    if not report.receipts:
-        return None
-    return report.receipts[-1].get("schema")
+def _last_receipt(report: RunReport) -> dict[str, Any] | None:
+    return report.receipts[-1] if report.receipts else None
+
+
+def _terminal_reason(report: RunReport) -> str | None:
+    last = _last_receipt(report)
+    return last.get("terminalReason") if last else None
 
 
 def check_quiet_produces_no_effects(driver: HostDriver, scenario: Scenario) -> None:
-    """A quiet run must dispatch no effects and emit an attention-tier receipt."""
+    """A quiet run must dispatch no effects and say so in its terminal reason."""
     iid = driver.install(scenario.circuit, scenario.binding)
     report = driver.activate(iid, scenario.quiet_signal)
     assert not report.effects_executed, (
@@ -120,14 +123,22 @@ def check_quiet_produces_no_effects(driver: HostDriver, scenario: Scenario) -> N
     assert not report.effect_requests, (
         "quiet run proposed effect requests; a quiet result is a first-class no-op (§9)"
     )
-    assert _last_receipt_schema(report) == ATTENTION_SCHEMA, (
-        "quiet run must emit a compact attention-tier receipt (§13), got "
-        f"{_last_receipt_schema(report)!r}"
+    last = _last_receipt(report)
+    assert last is not None and last.get("schema") == RECEIPT_SCHEMA, (
+        f"quiet run must emit a receipt (§13), got {last!r}"
+    )
+    assert not last.get("effects"), (
+        "a quiet run reached no effect stage; the receipt must omit the effects "
+        "block rather than carry an empty one (§13)"
+    )
+    assert _terminal_reason(report) == "no-actionable-finding", (
+        "a quiet run's terminal reason must be 'no-actionable-finding' (§13.2), got "
+        f"{_terminal_reason(report)!r}"
     )
 
 
 def check_duplicate_produces_no_effects(driver: HostDriver, scenario: Scenario) -> None:
-    """The same signal twice yields at most one effect; the second run is attention-tier."""
+    """The same signal twice yields at most one effect; the second run is a duplicate."""
     iid = driver.install(scenario.circuit, scenario.binding)
     first = driver.activate(iid, scenario.duplicate_signal)
     second = driver.activate(iid, scenario.duplicate_signal)
@@ -139,9 +150,9 @@ def check_duplicate_produces_no_effects(driver: HostDriver, scenario: Scenario) 
     assert not second.effects_executed, (
         "the second (duplicate) run executed an effect; it should have been deduped (§8.3)"
     )
-    assert _last_receipt_schema(second) == ATTENTION_SCHEMA, (
-        "a deduped duplicate run must emit an attention-tier receipt (§13), got "
-        f"{_last_receipt_schema(second)!r}"
+    assert _terminal_reason(second) == "duplicate-signal", (
+        "a deduped run's terminal reason must be 'duplicate-signal' (§13.2), got "
+        f"{_terminal_reason(second)!r}"
     )
 
 
@@ -155,16 +166,16 @@ def check_invalid_judgment_fails_closed(driver: HostDriver, scenario: Scenario) 
     assert report.run_status in ("failed", "error"), (
         f"invalid gateway result did not fail closed; run_status={report.run_status!r} (§10.2)"
     )
-    judgment = next(
-        (r for r in report.receipts if r.get("schema") == JUDGMENT_SCHEMA), None
+    last = _last_receipt(report)
+    assert last is not None, "a failed judgment stage must still emit a receipt (§13)"
+    assert last.get("terminalReason") == "gateway-result-invalid", (
+        "a gateway answer that fails validation has its own terminal reason (§13.2), "
+        f"got {last.get('terminalReason')!r}"
     )
-    assert judgment is not None, (
-        "a failed judgment stage must still emit a full judgment receipt (§13)"
-    )
-    decisions = judgment.get("decisions", {})
+    decisions = last.get("decisions") or {}
     assert "validation" in decisions, (
-        "the judgment receipt must record the validation decision that rejected the "
-        "gateway result (§13)"
+        "the receipt must record the validation decision that rejected the gateway "
+        "result (§13)"
     )
 
 

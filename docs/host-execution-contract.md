@@ -89,7 +89,7 @@ them) so its `derive_effect_key(...)` matches the host's recomputation (spec §8
 - in fixture/eval mode the host substitutes the fixture's canned result — the
   implementation cannot tell the difference and must not try;
 - the host records the gateway request/result coordinates, usage, and cost in the
-  run's judgment receipt (spec §10.2, §13).
+  run's receipt (spec §10.2, §13).
 
 ## Result (chip → host)
 
@@ -111,7 +111,7 @@ Rules the host enforces (not the implementation's honor system):
 - effect idempotency keys must be host-recomputed via `chip.envelopes.derive_effect_key`
   and match the implementation's claim;
 - effect `judgmentReceiptRef` back-fill: an effect request is constructed before
-  the run's judgment receipt exists, so the implementation MAY set
+  the run's receipt exists, so the implementation MAY set
   `judgmentReceiptRef` to the sentinel `"pending"` (`chip.envelopes.PENDING_RECEIPT_REF`).
   The host MUST back-fill the real receipt reference before persisting or
   dispatching the effect; a dispatched effect still carrying `"pending"` is a host

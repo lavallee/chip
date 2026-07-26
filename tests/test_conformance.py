@@ -26,12 +26,15 @@ from chip.conformance.hostkit import (
 )
 from chip.envelopes import derive_effect_key
 from chip.receipts import (
-    ATTENTION_SCHEMA,
-    JUDGMENT_SCHEMA,
+    RECEIPT_SCHEMA,
+    Authority,
     Coordinates,
-    build_attention_receipt,
-    build_judgment_receipt,
+    build_receipt,
 )
+
+_DIGESTS = {"contract": "sha:c", "implementation": "sha:i"}
+_BOUND = Authority(effective_ceiling="recommend", reason="binding-ceiling")
+_CAPPED = Authority(effective_ceiling="observe", reason="unevaluated-tuple")
 
 _DECLARED_CAPABILITIES = {"state.single-flight.v1", "gateway-attempt.v1"}
 _TARGET_OWNER = "owner:ideas"
@@ -69,27 +72,25 @@ class FakeHost:
         stype = signal.get("type")
 
         if stype == "quiet":
-            attention_receipt = build_attention_receipt(
+            # A quiet run reached no state, gateway, or effect stage: core only.
+            quiet_receipt = build_receipt(
                 coords, run_status="completed", semantic_outcome="quiet",
-                terminal_reason="no-new-report",
+                terminal_reason="no-actionable-finding",
+                digests=_DIGESTS, authority=_BOUND,
             )
-            return RunReport(run_id=run_id, receipts=[attention_receipt.to_dict()],
-                             terminal_reason="no-new-report", run_status="completed")
+            return RunReport(run_id=run_id, receipts=[quiet_receipt.to_dict()],
+                             terminal_reason="no-actionable-finding", run_status="completed")
 
         if stype == "invalid":
             # Canned malformed gateway result: validation rejects it -> fail closed.
-            judgment_receipt = build_judgment_receipt(
+            invalid_receipt = build_receipt(
                 coords, run_status="failed", semantic_outcome="finding-invalid",
                 terminal_reason="gateway-result-invalid",
-                digests={"contract": "sha:c", "implementation": "sha:i", "policy": "sha:p"},
-                decisions={
-                    "validation": {"ok": False, "reason": "malformed gateway result"},
-                    "dedupe": {}, "budget": {}, "authority": {},
-                },
-                effects={"proposed": [], "approved": [], "rejected": [], "executed": []},
-                state_version_before="v1", state_version_after="v1",
+                digests=_DIGESTS, authority=_BOUND,
+                decisions={"validation": {"ok": False, "reason": "malformed gateway result"}},
+                state={"versionBefore": "v1", "versionAfter": "v1"},
             )
-            return RunReport(run_id=run_id, receipts=[judgment_receipt.to_dict()],
+            return RunReport(run_id=run_id, receipts=[invalid_receipt.to_dict()],
                              terminal_reason="gateway-result-invalid", run_status="failed")
 
         # Positive / duplicate: build the stable effect key from lineage.
@@ -104,45 +105,40 @@ class FakeHost:
         }
         if key in state.seen_effect_keys:
             # Target-side dedup: no new effect, compact attention receipt.
-            duplicate_receipt = build_attention_receipt(
+            duplicate_receipt = build_receipt(
                 coords, run_status="completed", semantic_outcome="duplicate",
-                terminal_reason="duplicate-lineage",
-                effect_decision={"deduped": True, "idempotencyKey": key},
+                terminal_reason="duplicate-signal",
+                digests=_DIGESTS, authority=_BOUND,
+                decisions={"dedupe": {"deduped": True, "idempotencyKey": key}},
             )
             return RunReport(run_id=run_id, receipts=[duplicate_receipt.to_dict()],
                              effect_requests=[request], effects_executed=[],
-                             terminal_reason="duplicate-lineage", run_status="completed")
+                             terminal_reason="duplicate-signal", run_status="completed")
 
         state.seen_effect_keys.add(key)
-        accepted_receipt = build_judgment_receipt(
+        accepted_receipt = build_receipt(
             coords, run_status="completed", semantic_outcome="finding-valid",
-            terminal_reason="finding",
-            digests={"contract": "sha:c", "implementation": "sha:i", "policy": "sha:p"},
-            decisions={"validation": {"ok": True}, "dedupe": {"key": key},
-                       "budget": {}, "authority": {"class": effect_class}},
+            terminal_reason="finding-effect-proposed",
+            digests=_DIGESTS,
+            authority=_CAPPED if state.unevaluated else _BOUND,
+            decisions={"validation": {"ok": True}, "dedupe": {"key": key}},
             effects={"proposed": [request], "approved": [request],
                      "rejected": [], "executed": [request]},
-            state_version_before="v1", state_version_after="v2",
+            state={"versionBefore": "v1", "versionAfter": "v2"},
         )
         return RunReport(run_id=run_id, receipts=[accepted_receipt.to_dict()],
                          effect_requests=[request], effects_executed=[request],
-                         terminal_reason="finding", run_status="completed")
+                         terminal_reason="finding-effect-proposed", run_status="completed")
 
+    # Lifecycle operations are not runs: they carry their own reasons (§13.2)
+    # and are recorded as lifecycle events, not run receipts.
     def pause(self, installation_id: str) -> dict:
-        return build_attention_receipt(
-            Coordinates(run="run:pause", installation=installation_id, circuit="circ:triage",
-                        chip="press.new-report-triage", binding="bind:1"),
-            run_status="paused", semantic_outcome="installation-paused",
-            terminal_reason="operator-pause",
-        ).to_dict()
+        return {"installation": installation_id, "status": "paused",
+                "reason": "operator-pause"}
 
     def revoke(self, installation_id: str) -> dict:
-        return build_attention_receipt(
-            Coordinates(run="run:revoke", installation=installation_id, circuit="circ:triage",
-                        chip="press.new-report-triage", binding="bind:1"),
-            run_status="revoked", semantic_outcome="installation-revoked",
-            terminal_reason="operator-revoke",
-        ).to_dict()
+        return {"installation": installation_id, "status": "revoked",
+                "reason": "operator-revoke"}
 
     def capability_probe(self, installation_id: str, capability: str) -> bool:
         return capability in _DECLARED_CAPABILITIES
@@ -209,6 +205,8 @@ def test_receipt_tiers_are_what_checks_expect(binding_dict, linear_circuit_dict,
     host = FakeHost()
     iid = host.install(scenario.circuit, scenario.binding)
     quiet = host.activate(iid, scenario.quiet_signal)
-    assert quiet.receipts[-1]["schema"] == ATTENTION_SCHEMA
+    assert quiet.receipts[-1]["schema"] == RECEIPT_SCHEMA
+    assert "effects" not in quiet.receipts[-1]
     finding = host.activate(iid, scenario.positive_signal)
-    assert finding.receipts[-1]["schema"] == JUDGMENT_SCHEMA
+    assert finding.receipts[-1]["schema"] == RECEIPT_SCHEMA
+    assert finding.receipts[-1]["effects"]["executed"]

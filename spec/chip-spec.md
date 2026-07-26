@@ -1,8 +1,8 @@
 # Chips and circuits
 
 Status: `candidate specification`  
-Version: `0.5.0`  
-Date: `2026-07-17`  
+Version: `0.6.0`  
+Date: `2026-07-25`  
 Implementation status: `v1 experiment in progress (Fab host)`  
 History: v0.2.0 followed an independent adversarial model review; v0.3.0 was the
 first published edition, relocated to this repository; v0.4.0 folds in
@@ -12,7 +12,13 @@ v0.4.2 adds binding chipParameters; v0.5.0 admits the **delegation profile** of
 the contract (agent-invoked activation, partitioned state, lifecycle telemetry)
 alongside the original **attention profile**, adds non-contractual manifest
 hints and an `authoredAgainst` model-generation stamp, and introduces host-owned
-environment profiles as a third resolution layer between manifest and binding.
+environment profiles as a third resolution layer between manifest and binding;
+v0.6.0 is the first edition shaped by production receipts rather than design
+intent — it collapses the two receipt tiers into one shape, closes the terminal
+reason vocabulary, reduces the authority decision to an effective ceiling plus a
+reason, promotes packaging/resolution and outcome receipts to normative, and
+moves six non-normative sections to `docs/`. It removes surface; see the
+changelog for the migration.
 
 ## Abstract
 
@@ -137,7 +143,7 @@ Only the following surface is normative for the first experiment:
   delegation-profile map/cache chips, `partitioned(<keyField>)` (§9);
 - linear circuits containing at most three chips, with no nesting, feedback
   edges, push delivery, webhooks, or cross-circuit routing;
-- target-side effect deduplication and two-tier Fab receipts; and
+- target-side effect deduplication and single-shape Fab receipts; and
 - two pilots: publication triage and PR sign-off.
 
 Registry, chipset distribution, multiple hosts, general scheduling, nested or
@@ -822,39 +828,51 @@ as a binding must not (above).
 Every accepted activation produces a run. A rejected activation produces a
 compact attempt receipt without allocating mutable chip state.
 
-Fab stores two receipt tiers:
+There is **one receipt shape**. Every run emits it. A required core is always
+present; the remaining blocks appear only when the run reached the stage that
+produces them. Spec 0.5 defined two tiers (`#attention` and `#judgment`); the
+distinction described *how much of the run happened*, which the blocks already
+say, so it is removed.
 
-- an **attention receipt** for quiet, duplicate, rejected, or policy-denied
-  attempts: coordinates, input/evidence digests, state transition if any,
-  terminal reason, policy/effect decision, cost, and timing; and
-- a **full judgment receipt** for findings, model judgments, needs-input states,
-  proposed effects, failures after execution starts, and executed effects.
-
-A full judgment receipt MUST include:
+The required core, present on every receipt:
 
 - run, installation, circuit, chip, and binding identifiers;
-- exact contract, implementation, adapter, policy, model, prompt, and artifact
-  digests used;
-- input ids and evidence/custody references;
-- state version before and after;
-- ordered stage events and durations;
-- structured Somm request/result coordinates and usage;
-- validation, dedupe, budget, and authority decisions;
-- proposed, approved, rejected, and executed effects;
-- artifacts and verifier results;
-- terminal reason;
-- cost and latency; and
-- outcome links when later known.
+- the contract and implementation digests actually used;
+- run status, semantic outcome, and terminal reason (§13.2);
+- the effective authority decision (§14); and
+- timing.
 
-Receipts MUST separate run status from semantic outcome. “Process exited” is not
-“promise satisfied”; “model answered” is not “finding valid”; “PR opened” is not
-“change correct.”
+Optional blocks, each present only if the run reached it:
+
+| Block | Present when |
+|---|---|
+| `inputs` | ids and evidence/custody references were resolved |
+| `state` | mutable state was allocated — version before and after |
+| `stages` | ordered stage events and durations |
+| `gateway` | a gateway was invoked — request/result coordinates, usage, cost |
+| `decisions` | validation, dedupe, and budget were evaluated |
+| `effects` | effects were proposed, approved, rejected, or executed |
+
+Receipts MUST separate run status from semantic outcome. "Process exited" is not
+"promise satisfied"; "model answered" is not "finding valid"; "PR opened" is not
+"change correct."
+
+A receipt MUST NOT embed a harness's raw error text. A failure records a typed
+reason from §13.2 plus a digest or reference to the detail in its owning system.
+
+> Evidence: across 91 production judgment receipts, `outcomeLinks` and
+> `artifacts` were empty on every single one, and `verifierResults` carried the
+> same constant environment attestation every time — so all three are removed
+> from the run receipt. Twelve receipts carried no `timing` and fourteen no
+> `id`, meaning the "MUST include" list did not describe what hosts emit. One
+> failure embedded several kilobytes of raw model output and schema-validation
+> text in a decision field.
 
 Receipts are append-only while retained. Corrections supersede rather than erase
 prior records. Large evidence remains in its owning custody system and is linked
-by stable id and digest. A binding MUST declare retention for each tier. Fab MAY
-compact expired attention receipts into signed aggregate counts plus a digest
-chain; judgment/effect receipts cannot be compacted while an effect, decision,
+by stable id and digest. A binding MUST declare retention. A host MAY compact
+expired receipts that carry no `effects` block into signed aggregate counts plus
+a digest chain; a receipt cannot be compacted while an effect, decision,
 evaluation, incident, or outcome reference remains live.
 
 ### 13.1 Lifecycle telemetry
@@ -894,6 +912,68 @@ the acting `operator`, the `chipAlias` and `chipVersion`, the
 
 Lifecycle records are append-only and correction-by-supersession like receipts.
 They are host telemetry, not part of a chip's portable contract.
+
+### 13.2 Terminal reasons
+
+`terminalReason` is a closed vocabulary. A host MUST use one of these values and
+MUST NOT invent others; a reason that does not fit is a signal that the spec is
+missing a case, not license to write prose into the field.
+
+| Reason | Run status | Meaning |
+|---|---|---|
+| `no-actionable-finding` | completed | The chip paid attention and had nothing to say |
+| `finding-no-effect` | completed | A valid finding that proposes no effect |
+| `finding-effect-proposed` | completed | A finding proposing at least one effect |
+| `duplicate-signal` | completed | Suppressed by dedupe or lineage |
+| `activation-rejected` | rejected | Single-flight lease held by a live activation |
+| `installation-not-enabled` | rejected | The installation is paused, revoked, or never enabled |
+| `signal-invalid` | failed | The activation signal failed envelope validation |
+| `implementation-digest-mismatch` | failed | Unexplained content change against the pin (§16.3) |
+| `gateway-unavailable` | failed | The gateway could not be reached or was exhausted |
+| `gateway-result-invalid` | failed | The gateway answered, and the answer failed validation |
+| `host-runtime-error` | failed | The host failed before the chip reached a verdict |
+| `authority-denied` | failed | Policy refused the run or its effects |
+| `effect-dispatch-failed` | failed | An approved effect could not be handed to its sink |
+
+Lifecycle and evaluation records use their own reasons (`operator-install`,
+`operator-revoke`, `evaluation-recorded`, `succession-recorded`) and are not run
+receipts.
+
+> Evidence: eight distinct terminal reasons appeared across 148 production
+> receipts. Two failure modes that occurred repeatedly — an exhausted gateway
+> and a gateway answer that failed schema validation — had no reason of their
+> own and were both recorded as generic host failures.
+
+### 13.3 Outcome receipts
+
+A run receipt records what a chip decided. It cannot record whether the chip was
+right, because that is not known yet. An **outcome receipt** closes that loop: it
+is a separate, later record that references a run receipt and states what
+happened downstream.
+
+A host that consumes a chip's judgment to make a decision MUST emit an outcome
+receipt when the downstream result becomes known. It carries:
+
+- the run receipt reference and the chip's own verdict;
+- the **decision the host actually took**, and whether it followed the chip;
+- the **independent floor**, if the host has one — the decision it would have
+  taken without the chip;
+- the **downstream verdict** once observed; and
+- whether this run was **counterfactually audited** — the chip's advice was
+  recorded but deliberately not followed, so its precision can be measured
+  instead of inferred from silence.
+
+Outcome receipts are what make a chip improvable. Without them, evaluation
+(§21) can only measure a chip against fixtures it was authored alongside, and
+`optimize` (§13.1) has no signal to optimize against. A chip whose host emits no
+outcome receipts can be evaluated but not calibrated.
+
+> Evidence: the reference host already maintained exactly this record — chip
+> plan, independent label-ladder decision, verifier verdict, final job status,
+> audit flag — in a host-private file, because the run receipt had nowhere to
+> put it. Every run receipt's `outcomeLinks` field sat empty while the data
+> existed a directory away. This section promotes that record into the contract
+> and deletes the field that failed to hold it.
 
 ## 14. Authority, security, and supply chain
 
@@ -971,10 +1051,82 @@ capability fails binding before execution. Optional capability degradation MUST
 be declared and evaluated; a host may not silently replace one effect or model
 stage with another.
 
-## 16. Registry and distribution (later hypothesis)
+## 16. Packaging, distribution, and resolution
 
-A registry is useful only if it improves trustworthy reuse. It is not required
-for the first experiment.
+A chip that a host cannot resolve is not portable, and a chip that resolves
+differently in two environments is not the same chip. This section is normative.
+It was a later hypothesis through spec 0.5; operating evidence promoted it.
+
+### 16.1 Package identity is a digest, not a path
+
+A package's identity is the digest of its content. A host MUST resolve an
+installed chip from a content-addressed store the host owns, and MUST NOT
+resolve it through a path into the authoring workspace. An installation records
+the digest it is pinned to; the store, not the filesystem layout of whoever
+authored the chip, is what the host reads at activation.
+
+> Evidence: 74 consecutive production activations failed with `chip package
+> directory ... not found` after the host was installed as a service. The
+> package existed, the pin was valid, and the path was meaningless in the
+> environment where activations actually ran.
+
+### 16.2 The entry point is declared, not discovered
+
+The manifest MUST declare the package's executable entry point. A host MUST NOT
+depend on the package's internal module layout, file names, or import graph to
+locate the implementation, and MUST NOT require the package to import any
+non-public symbol of the contract library.
+
+A package MUST declare the contract library major version it was built against.
+The library's internal module paths are not API: renaming, splitting, or merging
+them is not a breaking change to this specification, and a package that depends
+on them is malformed.
+
+> Evidence: renaming one internal library submodule silently disabled an
+> installed chip for 26 activations. The chip's declared contract had not
+> changed.
+
+### 16.3 Revision succession
+
+Replacing a chip's implementation is an **upgrade of an existing installation**,
+not a new installation. A succession preserves installation identity, cursor
+lineage, dedupe and lineage keys, per-day effect counters, and stable effect
+keys; it re-pins the digest and records a succession receipt naming the prior
+and successor digests.
+
+A digest change that arrives through a declared succession MUST NOT be reported
+as an integrity violation. Only an *unexplained* digest change — content that
+no longer matches the pin, with no succession on record — is an integrity
+violation, and it MUST still fail closed.
+
+> Evidence: two chips produced 13 installs and 11 revokes in eight days, plus 13
+> `implementation-digest-mismatch` failures against a single pin. Every ordinary
+> edit to a chip's implementation presented as a supply-chain event.
+
+### 16.4 Preflight and liveness
+
+Before an installation is enabled, a host MUST verify that the package resolves
+and its declared entry point loads **in the environment where activations will
+run**. A preflight that passes in the authoring environment and is not repeated
+in the execution environment does not satisfy this requirement.
+
+A host MUST record every fail-soft fallback against the installation that caused
+it, and MUST expose consecutive-fallback counts. An installation whose last
+successful activation is older than its declared attention cadence is **dark**,
+and a host MUST surface dark installations rather than reporting their silence
+as quiet operation.
+
+Fail-soft is required (§13) and is not in tension with this: a host degrades
+without failing the owning system's work, *and* says so.
+
+> Evidence: a chip fell back on 100 of 170 consecutive activations across two
+> distinct root causes, over a span of eight days, without surfacing anywhere.
+> Every one of those runs recorded a well-formed receipt.
+
+### 16.5 Registry (later hypothesis)
+
+A registry is useful only if it improves trustworthy reuse. It is not required,
+and nothing above depends on one: a content-addressed store may be a directory.
 
 A registry record SHOULD contain:
 
@@ -1001,20 +1153,10 @@ packages. That decision is not made by this specification, and version 1 does
 not require a registry or chipset. The originating research service MUST NOT
 become the registry or binding authority.
 
-## 17. Board projection and steering
+## 17. Board projection and steering — moved
 
-The owning system owns installation and project-operation steering. Its existing
-board/decision surface should project chip/circuit state through the owning
-system's existing decision-card and guarded-action contracts rather than
-acquiring a chip-specific state machine. The originating research service
-supplies evidence-linked recommendations and learns from outcomes; it does not
-command the board. Agent surfaces see thin wrappers, receipts, and typed
-decisions, not host credentials or canonical installation state.
-
-The board may show freshness, quiet/finding/needs-input/failed state, evidence,
-cost, proposed effects, and pause/revoke/re-run actions. Canonical state remains
-with Fab and the owning system. Prose may accompany a guarded action but cannot
-mutate state without a validated action and receipt.
+*Non-normative. Moved to [docs/board-projection.md](../docs/board-projection.md) in spec 0.6.
+The section number is retained so existing cross-references stay valid.*
 
 ## 18. Skills as wrappers over chips
 
@@ -1059,181 +1201,15 @@ Doctrine is separate from both. Principles such as “evidence before claims” 
 “write the failing test first” may inform wrappers, policies, graders, or chip
 fixtures. They are not automatically chips.
 
-## 19. Skill-package decomposition challenge
+## 19. The skill-package decomposition challenge — moved
 
-The first serious portability test SHOULD decompose representative slices of two
-representative mature skill suites: a browser-operations suite and an
-engineering-workflow suite.
+*Non-normative. Moved to [docs/skill-decomposition.md](../docs/skill-decomposition.md) in spec 0.6.
+The section number is retained so existing cross-references stay valid.*
 
-### 19.1 Required inventory
+## 20. Reference circuits — moved
 
-For every behavior in the selected slice, classify it as:
-
-- chip;
-- circuit;
-- thin wrapper;
-- tool;
-- dialogic skill;
-- doctrine/rubric;
-- host adapter;
-- test/evaluation fixture; or
-- obsolete model-generation scaffolding.
-
-No behavior may disappear silently. Safety and approval behavior receives an
-explicit classification and equivalence test.
-
-The admission rule still applies: an installation must declare an ongoing
-observation relationship to a signal class or the package must own durable
-cross-run state, and it must produce a bounded response under an authority
-contract. A callable operation with neither is a tool, even if a skill currently
-wraps it. A capability whose value lies in open-ended conversation and situated
-judgment remains a dialogic skill.
-
-### 19.2 Candidate decomposition: browser-operations suite
-
-Potential tools or host capabilities:
-
-- browser snapshot/evidence capture;
-- browser security and hostile-content scan;
-- PR/diff/test evidence collection;
-- normalized review-finding construction; and
-- release evidence verification.
-
-Potential chips:
-
-- WIP/PR attention state and context checkpointing;
-- stale-signoff invalidation after head or evidence change; and
-- post-run outcome/learning candidate attention.
-
-Potential circuits:
-
-- review -> classify findings -> repair proposal -> independent reverify;
-- QA -> evidence capture -> finding triage -> bounded retest; and
-- ship-readiness -> checks -> proof packet -> human release decision.
-
-These are decomposition hypotheses, not valid version 1 circuit shapes. Each
-must first be reduced to a linear composition of no more than three admitted
-chips, with ordinary evidence operations remaining tools inside a chip's Fab
-attempt.
-
-Potential wrappers or dialogic skills:
-
-- CEO, engineering, design, and developer-experience review dialogues;
-- QA, review, and ship command invocation and interpretation; and
-- host-specific command discovery.
-
-### 19.3 Candidate decomposition: engineering-workflow suite
-
-Potential tools or Fab capabilities:
-
-- isolated worktree and baseline receipt;
-- failing-test proof;
-- test-result and verification receipt;
-- plan/spec compliance review packet;
-- code-quality review packet; and
-- branch completion-state inspection.
-
-Potential chips:
-
-- plan/WIP state attention and stalled-decision detection;
-- verification freshness invalidation; and
-- unresolved-review attention with bounded sign-off response.
-
-Potential circuits:
-
-- approved plan -> isolated work -> red/green verification -> independent
-  review -> handoff; and
-- bug report -> root-cause evidence -> failing reproduction -> repair ->
-  regression proof.
-
-These too are later workflow hypotheses, not version 1 circuit definitions.
-Their dialogic and tool portions must not be forced into chips merely to fit the
-vocabulary.
-
-Potential wrappers, dialogic skills, or doctrine:
-
-- brainstorming and requirements dialogue;
-- systematic debugging heuristics;
-- TDD teaching and exception negotiation;
-- harness bootstrap and tool mapping; and
-- reminders to invoke the correct circuit.
-
-### 19.4 Graduation criteria
-
-The decomposition succeeds only when:
-
-1. all original safety and approval gates are mapped and preserved;
-2. wrappers contain no hidden operational state/effect machinery;
-3. the same chip artifacts run through at least two host adapters and two Somm
-   model/harness profiles;
-4. at least one circuit is used in a context not anticipated by the originating
-   skill package;
-5. original and decomposed variants are compared on the same development and
-   held-out tasks;
-6. the decomposed form is non-inferior on task outcome and improves at least one
-   of portability, diagnosis time, duplicate logic, prompt burden, or upgrade
-   effort;
-7. changing the model/harness requires changing only a binding, adapter, or thin
-   wrapper unless a held-out result proves the chip itself must change;
-8. receipts explain every action, abstention, and failure without reading the
-   original skill prompt; and
-9. an independent reviewer can reconstruct the composition and authority from
-   package artifacts alone.
-
-These are later thesis criteria, not gates for the Fab-only prototype. The
-whole-suite exercise begins only after the two narrow pilots have operated for
-90 days with comparable skill-only baselines. It MUST include adverse judgment
-fixtures where strict process is wrong—for example, a justified TDD exception—
-so decomposition does not amputate negotiation, taste, or context.
-
-The experiment fails if it merely renames skill steps, moves prompts into a
-manifest, reclassifies every useful tool as a chip, or produces a private
-runtime coupled to one suite.
-
-## 20. Reference circuits
-
-### 20.1 Publication attention circuit
-
-```text
-source adapter
-  -> publication-attention chip
-       [lineage/cursor -> original-artifact validation -> Somm materiality]
-  -> bounded-recommendation chip
-  -> owning-system idea adapter
-```
-
-Required behavior:
-
-- no new artifact produces a quiet receipt;
-- discovery mentions lead to original artifacts before evidence claims;
-- duplicate lineage does not masquerade as corroboration;
-- low-confidence materiality may abstain or request input;
-- the originating research service emits an evidence-linked, rate-limited
-  recommendation and does not commission work; and
-- later outcomes calibrate the materiality and source policy.
-
-### 20.2 PR sign-off circuit
-
-```text
-owning-system immutable PR snapshot signal
-  -> PR-evidence chip
-  -> independent-signoff chip [Somm rubric inside policy envelope]
-  -> freshness-and-decision chip
-  -> owning-system decision-card adapter
-```
-
-The sign-off output is one of:
-
-- `ready`: required proof present and no unresolved blocking concern;
-- `concerns`: exact findings and affected evidence;
-- `abstain`: the model or policy cannot justify a verdict;
-- `stale`: head, checks, review, or evidence changed after assessment;
-- `conflict`: independent reviewers or policies disagree materially; or
-- `needs_input`: a named human decision is required.
-
-The circuit MUST bind immutable base/head SHAs, reviewer independence, rubric,
-model/harness, prompt/skill/chip versions, tests, artifacts, review-thread state,
-cost, freshness, and disposition. `ready` does not itself authorize merge.
+*Non-normative. Moved to [docs/reference-circuits.md](../docs/reference-circuits.md) in spec 0.6.
+The section number is retained so existing cross-references stay valid.*
 
 ## 21. Evaluation
 
@@ -1285,79 +1261,20 @@ Registry and board metrics SHOULD include:
 - model/harness conditioned performance; and
 - whether the chip still adds value as models improve.
 
-## 22. Minimum viable experiments
+## 22. Pilots and graduation — moved
 
-The first pilot is publication triage. It implements one attention chip and one
-two-chip linear circuit in Fab's disposable, credential-free environment. Only
-after its state, taint, receipt, and outcome loop is credible should the second
-pilot exercise PR sign-off. Both compare against the existing skill/manual
-approach at comparable operator time and model cost.
+*Non-normative. Moved to [docs/pilots.md](../docs/pilots.md) in spec 0.6.
+The section number is retained so existing cross-references stay valid.*
 
-A pilot graduates from disposable evaluation when:
+## 23. Open questions — moved
 
-- the manifest and schemas validate;
-- duplicate and quiet cases produce no effects;
-- the bound implementation/Somm/model/harness tuple has passed its held-out
-  suite, and a profile swap correctly drops the new tuple back to `observe`;
-- an invalid or hostile model result fails closed;
-- at-least-once delivery produces at most one effect request;
-- target-side deduplication survives retry and state migration;
-- attention and full-judgment receipts meet their declared retention contract;
-- Fab capability-denial tests pass;
-- a human can pause/revoke the installation;
-- the output can be projected through the owning system's existing
-  decision/action contracts without copying canonical evidence or creating a
-  second board state machine; and
-- the held-out result beats or matches a skill-only baseline at acceptable cost.
+*Non-normative. Moved to [docs/open-questions.md](../docs/open-questions.md) in spec 0.6.
+The section number is retained so existing cross-references stay valid.*
 
-No package registry, visual builder, automatic promotion, or production binding
-is required. A second host is deliberately not a pilot gate; it is a later
-portability test with its own kill criterion.
+## 24. Falsification and kill criteria — moved
 
-## 23. Open questions
-
-1. Should the skill registry expand to own chip/chipset distribution, or should
-   chips use a narrower package index with an existing skill-distribution
-   boundary only resolving wrappers?
-2. After Fab proves the contract, what is the smallest second-host conformance
-   API, and can it avoid Fab internals?
-3. Should implementation artifacts target source packages, containers, WASM,
-   or allow several profiles from the start?
-4. `partitioned(<keyField>)` was admitted in v0.5 for delegation-profile
-   map/cache chips; what operating evidence would justify `cas` on top of
-   `single-flight` and `partitioned` state?
-5. Is `chipset` useful vocabulary or does it encourage overly broad bundles?
-6. What evidence could ever justify automatic patch adoption?
-7. How should registry revocation propagate to active but offline installations?
-8. How much of a review or research rubric belongs in doctrine, a wrapper, a
-   policy stage, or a model-stage artifact?
-9. Does “chip” remain clear in contexts already using UI chips or AI hardware?
-10. What decomposition slice of the two representative skill suites (a
-    browser-operations suite and an engineering-workflow suite) is small enough
-    to test honestly but large enough to exercise state, model judgment,
-    effects, and human gates?
-
-## 24. Falsification and kill criteria
-
-The thesis is not “typed artifacts are always better than prose.” Its durable
-core may prove to be only the governance envelope—identity, state, authority,
-taint, evaluation, and receipts—while capable models use ordinary tools for the
-work. The program SHOULD be narrowed or stopped when:
-
-1. after two quarters, the two pilots do not beat or match skill/manual
-   baselines at comparable operator time, model cost, and outcome quality;
-2. within one year, no materially different second host can implement the
-   public contract without depending on Fab internals—in which case chips
-   become a Fab feature or the portability claim is retired;
-3. a current frontier model using raw typed tools matches a chip on held-out
-   work—in which case keep only any independently valuable policy/receipt
-   envelope;
-4. PR or research decision time increases because operators must inspect more
-   machinery rather than better evidence;
-5. chip maintenance, tuple re-evaluation, and migration cost exceed the prompt
-   drift or duplicated logic they replace; or
-6. the implementation requires scheduling, routing, replay, or graph semantics
-   broad enough to recreate n8n or Temporal.
+*Non-normative. Moved to [docs/falsification.md](../docs/falsification.md) in spec 0.6.
+The section number is retained so existing cross-references stay valid.*
 
 ## 25. Status and scope of this document
 

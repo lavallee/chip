@@ -4,8 +4,59 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-07-25
+
+Tracks spec 0.6.0. **Breaking**: the receipt surface is rebuilt around one shape,
+and the datasheet generator has moved to the reference host. See
+`spec/CHANGELOG.md` for the reasoning and the production evidence behind each cut.
+
+### Removed
+
+- `AttentionReceipt`, `JudgmentReceipt`, `build_attention_receipt`,
+  `build_judgment_receipt`, `ATTENTION_SCHEMA`, `JUDGMENT_SCHEMA` — replaced by
+  the single `Receipt` / `build_receipt` / `RECEIPT_SCHEMA`.
+- `Datasheet`, `build_datasheet`, `render_markdown`, `render_html` and the
+  `chip.datasheet` module — moved to fab (`fab.chips.datasheet_generator`).
+
+### Added
+
+- **A `chip` CLI** (`chip.cli:main`) with the host-independent verbs only:
+  `validate`, `fixtures`, `digest`, `preflight`, `lint`, `receipt`. It
+  deliberately cannot install, activate, approve, or revoke — those need a host.
+  Every command takes `--json` and exits 0/1 so CI and skills can consume it.
+  `chip preflight` is §16.4 in executable form: it catches the package that
+  resolves in the authoring workspace and not in the environment where
+  activations run.
+- **`chip.packaging`** — `package_digest` (moved from the reference host, since
+  two hosts that digest a package differently do not have the same chip),
+  `split_entrypoint`, `preflight`, `PreflightReport`.
+- **Seven agent skills** under `src/chip/skills/`, shipped with the package and
+  mirrored to `skills/` as a Claude Code plugin (`chip-contract`):
+  `chip-candidate`, `chip-author`, `chip-fixtures`, `chip-evaluate`,
+  `chip-install`, `chip-audit`, `chip-outcome`. `tests/test_plugin_skills.py`
+  enforces byte-parity between the two trees and fails if a skill's command map
+  names a `chip` verb the CLI does not implement.
+- `Receipt`, `build_receipt`, `RECEIPT_SCHEMA` — one run receipt with a required
+  core and optional blocks.
+- `OutcomeReceipt`, `build_outcome_receipt`, `validate_outcome`,
+  `OUTCOME_SCHEMA` — spec §13.3, the record that links a judgment to what
+  happened next.
+- `Authority` — the effective ceiling plus one reason, replacing the host-side
+  five-field authority record.
+- `TERMINAL_REASONS` and `AUTHORITY_REASONS` — the closed vocabularies, exported
+  so hosts validate against the contract instead of inventing strings.
+- Source-commissioned candidate identity (`candidateId`, `sourceId`, and exact
+  `sourceRevision`), separate counterexample references, and explicit source
+  limits.
+- `commission_candidate` and content-addressed
+  `chip.candidate-receipt/v1` custody receipts. Exact replay is idempotent and
+  commissioned tallies union occurrence references across source revisions.
+
 ### Fixed
 
+- `Receipt.to_dict()` copies its mutable members. The dataclass is frozen, but
+  the old exports handed out live references, so a caller could edit a receipt
+  through its own export.
 - Renamed the internal `chip.taint` module to `chip.tainting`: importing the
   submodule used to shadow the package's exported `taint()` function
   (Python binds the submodule to the package attribute on import, silently
@@ -13,14 +64,21 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
   package-level export are unchanged; only direct submodule imports
   (`from chip.taint import ...`) must become `from chip.tainting import ...`.
 
-### Added
+### Migration
 
-- Source-commissioned candidate identity (`candidateId`, `sourceId`, and exact
-  `sourceRevision`), separate counterexample references, and explicit source
-  limits.
-- `commission_candidate` and content-addressed
-  `chip.candidate-receipt/v1` custody receipts. Exact replay is idempotent and
-  commissioned tallies union occurrence references across source revisions.
+- `build_attention_receipt(coords, …)` → `build_receipt(coords, …, digests=…,
+  authority=…)`. Attention-tier callers now supply digests and an authority
+  decision; runs that reached no state/gateway/effect stage simply omit those
+  blocks.
+- `build_judgment_receipt(…)` → `build_receipt(…)`, with
+  `state_version_before`/`_after` → `state={"versionBefore": …, "versionAfter": …}`,
+  `input_ids`/`evidence_refs` → `inputs={"ids": …, "evidenceRefs": …}`,
+  `stage_events` → `stages`, and `latency` folded into `cost`.
+- `decisions["authority"]` → the top-level `authority` field.
+- Freeform terminal reasons must map onto `TERMINAL_REASONS`. Operator actions
+  (install, pause, revoke, evaluate, approve) are **not runs** and no longer
+  borrow run-receipt vocabulary — hosts should give them their own record shape.
+
 
 ## [0.2.0] — 2026-07-17
 

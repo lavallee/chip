@@ -1,6 +1,6 @@
 [project]
 name = "chipspec"
-version = "0.2.0"
+version = "0.3.0"
 description = "chip — a contract for portable, versioned operational components (spec, validation, conformance kit)"
 requires-python = ">=3.12"
 license = { text = "MIT" }
@@ -14,6 +14,9 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = []
+
+[project.scripts]
+chip = "chip.cli:main"
 
 [project.optional-dependencies]
 jsonschema = ["jsonschema>=4"]
@@ -37,6 +40,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/chip"]
+# The skills are plain markdown under src/chip/skills/ and ship with the library,
+# so `pip install chipspec` puts them on disk. The repo-root skills/ tree is the
+# Claude Code plugin's synced copy; tests/test_plugin_skills.py enforces parity.
+artifacts = ["src/chip/skills/**/*.md"]
 
 [tool.ruff]
 line-length = 100
