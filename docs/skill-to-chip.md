@@ -71,6 +71,52 @@ question: **can a fixture falsify it?**
 Failure patterns drive eviction as much as success patterns: a mishap becomes a
 pinned fixture and a guard/gate requirement, so the same mistake cannot recur.
 
+## Placing a behavior from evidence
+
+The per-behavior test above is asked of a skill you are holding. The same
+question gets asked of behavior already running in production, where the
+evidence is a call ledger rather than a document — and there the answer should
+be derived, not remembered. `chip.placement` is that derivation: an evidence
+record in, a verdict plus its rationale out.
+
+It is deliberately only the rubric. It gathers nothing and reaches nothing;
+whatever holds the evidence builds a `PlacementEvidence` and calls `assess`.
+The scanner is not portable across fleets, but the rubric is, and a placement
+report that cannot be re-derived from its own cited measures is an opinion.
+
+Six rules survived a hand-run over 1.1M production calls:
+
+1. **Admission first, scoring second.** Standing-vs-burst (spec §4.1) is
+   decided before anything is scored, and rules out roughly a third of a real
+   fleet without judgment.
+2. **Time series, not aggregates.** Evidence is built from daily observations;
+   there is no constructor for a pre-summarized row. A 51-day aggregate hid a
+   10-day incident and produced a wrong verdict.
+3. **Never rank by cost.** The largest observed loss — 495,130 calls that never
+   reached a provider — cost nothing.
+4. **Repetition routes the ladder.** Novel input every time is extraction, and
+   distils toward *thin skill + CLI*; recurring input over a standing
+   relationship is what a chip rung is for.
+5. **The failure motif separates the envelope from the judgment.** Terminal
+   envelope failure means an observer or a parser, not a judgment chip.
+6. **`undecidable` is a verdict.** When evidence cannot decide, the rubric says
+   so and names what is missing.
+
+The negative verdicts are the point, not a byproduct. On a real fleet most
+subjects are not chip-shaped, and a rubric that only emits positives is an
+advocacy tool. `no-standing-relationship`, `no-judgment-stage`, and
+`undecidable` are what make the positives worth reading.
+
+Two limits are worth stating plainly. A verdict is single-valued, so a
+behavior that is both envelope-failing and novel-input reports as an observer
+and the parser reading is displaced — the envelope problem is simply the one to
+fix first. And falsifiability itself is not machine-checkable without a declared
+output contract: where none exists, a rung verdict is capped at low confidence
+and carries `output contract undeclared` as a gap. A placement report is exactly
+the external finding system `docs/candidates.md` describes, so `source_limits`
+builds the `sourceLimits` block that carries those gaps into any candidate it
+commissions.
+
 ## What the residual skill becomes
 
 As behaviors move down the ladder, the skill that remains gets **thinner**, not
