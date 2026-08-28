@@ -89,3 +89,9 @@ class CandidateError(ChipError):
     """A candidate-ledger entry is malformed (the side-activity capture convention)."""
 
     code = "CHIP_CANDIDATE_ERROR"
+
+
+class PlacementError(ChipError):
+    """A placement evidence record or assessment is malformed (ladder convention)."""
+
+    code = "CHIP_PLACEMENT_ERROR"

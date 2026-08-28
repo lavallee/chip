@@ -28,6 +28,7 @@ from chip.errors import (
     FixtureError,
     LifecycleError,
     ManifestError,
+    PlacementError,
     ReceiptError,
     StateError,
 )
@@ -112,6 +113,16 @@ _LAZY: dict[str, tuple[str, str]] = {
     "commission_candidate": ("chip.candidates", "commission_candidate"),
     "load_candidates": ("chip.candidates", "load_candidates"),
     "tally": ("chip.candidates", "tally"),
+    # placement assessment (the distillation ladder, docs/skill-to-chip.md)
+    "DayObservation": ("chip.placement", "DayObservation"),
+    "PlacementEvidence": ("chip.placement", "PlacementEvidence"),
+    "Placement": ("chip.placement", "Placement"),
+    "Reason": ("chip.placement", "Reason"),
+    "assess": ("chip.placement", "assess"),
+    "assess_all": ("chip.placement", "assess_all"),
+    "source_limits": ("chip.placement", "source_limits"),
+    "VERDICTS": ("chip.placement", "VERDICTS"),
+    "THRESHOLDS": ("chip.placement", "THRESHOLDS"),
     # fixtures
     "Fixture": ("chip.fixtures", "Fixture"),
     "load_fixtures": ("chip.fixtures", "load_fixtures"),
@@ -162,6 +173,7 @@ __all__ = [
     "EnvironmentProfileError",
     "LifecycleError",
     "CandidateError",
+    "PlacementError",
     # lazy
     *_LAZY.keys(),
     "conformance",

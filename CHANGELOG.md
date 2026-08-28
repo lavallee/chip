@@ -4,6 +4,20 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Added
+
+- `chip.placement` — the placement rubric for the distillation ladder
+  (`docs/skill-to-chip.md`): `PlacementEvidence` / `DayObservation` in,
+  a `Placement` verdict plus the `Reason`s that produced it out. Pure and
+  gathering-free, so any scanner or telemetry store can feed it. Verdicts are a
+  closed vocabulary (`observer`, `mint`, `parser`, `no-standing-relationship`,
+  `no-judgment-stage`, `undecidable`), and `source_limits` builds the
+  `sourceLimits` block that carries a report's gaps into a commissioned
+  candidate. The six encoded rules are the ones that survived a hand-run over
+  1.1M production calls; evidence is only constructible from a daily series
+  because aggregates produced a wrong verdict during it.
+- `PlacementError` (`CHIP_PLACEMENT_ERROR`).
+
 ## [0.3.0] — 2026-07-25
 
 Tracks spec 0.6.0. **Breaking**: the receipt surface is rebuilt around one shape,
