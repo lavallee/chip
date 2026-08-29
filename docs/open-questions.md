@@ -21,7 +21,21 @@ Live questions this specification does not answer yet.
 8. How much of a review or research rubric belongs in doctrine, a wrapper, a
    policy stage, or a model-stage artifact?
 9. Does “chip” remain clear in contexts already using UI chips or AI hardware?
+   (Deferred as of 2026-08-29, not settled: renaming is cheapest before a
+   second host adopts the vocabulary.)
 10. What decomposition slice of the two representative skill suites (a
     browser-operations suite and an engineering-workflow suite) is small enough
     to test honestly but large enough to exercise state, model judgment,
     effects, and human gates?
+11. What makes a held-out suite *adequate*? §21 says what a suite must cover
+    and nothing about minimum size, held-out provenance, grader quality, or
+    refresh cadence — yet every promotion, rung transition, and retirement
+    gates on one passing. This is the contract's strongest guarantee resting on
+    its least-specified clause.
+12. A placement verdict is single-valued, but a behavior can be both
+    envelope-failing and novel-input at once, and reporting it as an observer
+    displaces the parser reading. Should placement return a ranked set instead,
+    or is "fix the envelope first" the right forced ordering?
+13. The placement thresholds were derived from one fleet's hand-run. What
+    evidence would justify moving them, and how would a second fleet's
+    disagreement be told apart from a mis-set boundary?
