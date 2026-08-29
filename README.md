@@ -65,7 +65,10 @@ is named `chipspec` on PyPI because `chip` is squatted).
 
 v0 experiment — one host (fab, being open-sourced),
 contract under active evolution. See
-[`spec/chip-spec.md`](./spec/chip-spec.md) for the current spec.
+[`spec/chip-spec.md`](./spec/chip-spec.md) for the current spec,
+[`ROADMAP.md`](./ROADMAP.md) for what happens next, and
+[`docs/falsification.md`](./docs/falsification.md) for the conditions under
+which this program should stop.
 
 ## Layout
 
@@ -75,6 +78,7 @@ contract under active evolution. See
 | `src/chip/` | The `chip` package: validation and conformance helpers |
 | `examples/` | Example chips exercising the contract |
 | `docs/` | Host execution contract, candidate-ledger, placement, and skill→chip conventions |
+| `ROADMAP.md` | The sequenced bets |
 | `tests/` | The conformance test suite |
 
 ## Design principles
