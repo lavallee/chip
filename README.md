@@ -77,7 +77,7 @@ which this program should stop.
 | `spec/` | The chip spec — the normative contract text |
 | `src/chip/` | The `chip` package: validation and conformance helpers |
 | `examples/` | Example chips exercising the contract |
-| `docs/` | Host execution contract, candidate-ledger, placement, and skill→chip conventions |
+| `docs/` | Host execution contract, candidate-ledger, placement, skill→chip conventions, and the socket design note |
 | `ROADMAP.md` | The sequenced bets |
 | `tests/` | The conformance test suite |
 

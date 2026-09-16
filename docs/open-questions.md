@@ -20,9 +20,10 @@ Live questions this specification does not answer yet.
 7. How should registry revocation propagate to active but offline installations?
 8. How much of a review or research rubric belongs in doctrine, a wrapper, a
    policy stage, or a model-stage artifact?
-9. Does “chip” remain clear in contexts already using UI chips or AI hardware?
-   (Deferred as of 2026-08-29, not settled: renaming is cheapest before a
-   second host adopts the vocabulary.)
+9. ~~Does “chip” remain clear in contexts already using UI chips or AI hardware?~~
+   Closed 2026-09-16: the name stays. The trigger for renaming was a second
+   host adopting the vocabulary; that host is the socket runner
+   ([`socket.md`](./socket.md)), and it adopts the vocabulary as-is.
 10. What decomposition slice of the two representative skill suites (a
     browser-operations suite and an engineering-workflow suite) is small enough
     to test honestly but large enough to exercise state, model judgment,

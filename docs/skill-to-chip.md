@@ -53,6 +53,11 @@ judgment-stage value, and authority usage are exactly what decide whether
 the behavior migrates further, stays, or returns toward prose when a
 stronger model reclaims it.
 
+Movement on the ladder used to require migrating first and evaluating after.
+The socket ([`socket.md`](./socket.md)) reverses that: several rungs'
+implementations of one contract run side by side, and the receipts of the
+comparison are the evidence that moves the placement.
+
 ## The per-behavior test
 
 Take the skill apart into individual behaviors. For each one ask a single

@@ -16,9 +16,14 @@ portability claim currently rests on a document.
 
 An outside review in August 2026 named three moves. Two are on this roadmap.
 The third — renaming the project away from a word owned by AI accelerators and
-UI components — is deliberately deferred, not rejected: it is cheap now and
-gets more expensive with every adopter, so it should be revisited before any
-second host commits to the vocabulary.
+UI components — was deferred until a second host committed to the vocabulary,
+and closed on 2026-09-16 when that host was chosen: the name stays.
+
+The same day added a primitive *below* chip, the socket
+([`docs/socket.md`](./docs/socket.md)): one contract with several live
+implementations, a runtime strategy, and a receipt per call. It reshapes items
+2 and 4 below and is the plug-into-existing-code path the review said was
+missing.
 
 ## 1. Say what makes an evaluation suite adequate
 
@@ -50,15 +55,21 @@ within a year, chips become a fab feature and the portability claim is retired.
 That is the thesis test, and the clock is running.
 
 The fastest path is not more contract surface. It is the smallest runner that
-can execute *anything*: single chip, `observe` class, no state, no effects — a
-few hundred lines that binds a circuit, runs it, and writes a receipt.
+can execute *anything*. As of 2026-09-16 that runner is the socket runner
+([`docs/socket.md`](./docs/socket.md)): an in-process library that holds a
+contract's members, applies a strategy, writes receipts and harvest, and
+depends on `chipspec` and nothing else. It is materially different from fab
+because it is a library inside an ordinary program, not a scheduled owning
+system.
 
 **Graduation:** a second implementation passes the conformance kit without
 importing fab, and open question #2 ("what is the smallest second-host
 conformance API") can be answered with a number instead of a guess.
 
-**Boundary:** the minimal host is a proof, not a product. It should be
-uncomfortable to use.
+**Boundary (revised):** the earlier boundary — a proof, not a product,
+uncomfortable to use — is withdrawn. The proof and the adoption path are the
+same artifact, as long as the conformance kit is still what it passes and it
+never grows a scheduler, policy gate, or custody store.
 
 ## 3. Lead with the ladder
 
@@ -90,6 +101,12 @@ with no declared output contract. The remaining work is the assessment tool
 itself: gather evidence, run the rubric, commission candidates through
 `source_limits`, and re-run it cheaply enough that placement is a standing
 report rather than an expedition.
+
+For a socketed workload the loop closes by construction: every receipt
+records which member answered, why, and what the shadow said, so the measures
+the rubric needs are produced by the call rather than reconstructed from a
+ledger afterwards. The first socket pilot (a claim-admissibility judgment,
+[`docs/socket.md`](./docs/socket.md) §Pilot) is the test of that claim.
 
 **Graduation:** a placement report is regenerable on demand and its verdicts
 are traceable to the receipts that produced them.
