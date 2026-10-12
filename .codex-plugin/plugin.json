@@ -1,6 +1,6 @@
 {
   "name": "chip-contract",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Teaches your agent the chip lifecycle and the socket beneath it: whether a behavior should be a chip at all, seating a function's code-or-model decision in a socket, authoring the package, the fixture suite that gates authority, installing so it resolves, auditing silent failures, and closing the outcome loop.",
   "author": {
     "name": "Marc Lavallee",

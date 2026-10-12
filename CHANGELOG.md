@@ -4,6 +4,12 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-10-12
+
+The release that leads with the ladder. The placement rubric, the socket design
+note, the eighth skill, and a second host (`chipsocket`, released the same day
+as v0.2.0) that passes its own suite without importing fab.
+
 ### Added
 
 - `chip-socket`, the eighth agent skill: when an existing function's
