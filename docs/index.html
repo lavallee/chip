@@ -3,187 +3,606 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="dark light">
-<title>chip · a contract for portable, versioned operational components</title>
-<meta name="description" content="chip is a contract for portable, versioned operational components: packaged units that observe declared signals, apply bounded judgment, and produce policy-gated responses with receipts.">
+<meta name="color-scheme" content="light dark">
+<title>chip · move the code-vs-model boundary on evidence</title>
+<meta name="description" content="chip is a contract for portable, versioned operational components, and chipsocket is the runner that seats several implementations of one function behind one contract. Every call writes a receipt; the receipts decide where the code-vs-model boundary belongs.">
 <meta property="og:title" content="chip">
-<meta property="og:description" content="A contract for portable, versioned operational components. Chips compose into linear circuits; hosts bind and run them.">
+<meta property="og:description" content="The code-vs-model boundary is a position that evidence should move. A socket for the function you already have; a chip for the behavior that has earned governance.">
 <meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect x=%272%27 y=%274%27 width=%2712%27 height=%278%27 rx=%271.5%27 fill=%27none%27 stroke=%27%231f4fbf%27 stroke-width=%271.6%27/%3E%3Crect x=%275%27 y=%276.5%27 width=%276%27 height=%273%27 fill=%27%23a86f12%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<a class="skip" href="#ladder">Skip to content</a>
+
 <header class="site">
-  <div class="wrap">
+  <div class="wrap bar">
     <a class="logo" href="./">
       <span class="mark">chip</span>
-      <span class="mark-sub">/ v0.4.0 · spec 0.6</span>
+      <span class="mark-sub">v0.4.0 · spec 0.6</span>
     </a>
-    <nav>
-      <a href="#what">what</a>
-      <a href="#install">install</a>
-      <a href="#principles">principles</a>
+    <nav aria-label="Sections">
+      <a href="#ladder">ladder</a>
+      <a href="#socket">socket</a>
+      <a href="#plug">plug in</a>
+      <a href="#chip">chip</a>
+      <a href="#agents">agents</a>
       <a class="gh" href="https://github.com/lavallee/chip" rel="noopener">GitHub</a>
     </nav>
   </div>
 </header>
 
 <main>
-  <section class="hero">
-    <div class="wrap">
-      <h1>A contract for portable,<br>versioned operational<br>components.</h1>
-      <p class="lede">
-        Chips are packaged units that observe declared signals, apply
-        bounded — optionally LLM-backed — judgment, and produce
-        policy-gated responses with receipts. Chips compose into linear
-        circuits; hosts bind and run them.
-      </p>
 
-<pre class="code"><span class="prompt">$</span> pip install chipspec
-<span class="prompt">$</span> python -c <span class="str">"
-import chip
-print(chip.__version__)
-"</span>
-<span class="c">→ 0.1.0</span></pre>
+  <section class="hero" aria-labelledby="thesis">
+    <div class="wrap hero-grid">
+      <div>
+        <h1 id="thesis">The code-vs-model boundary is a position that evidence should move.</h1>
+        <p class="lede">
+          Every behavior an agent performs sits somewhere between prose a model
+          reads and plain code nothing reads. Most of it pools at the prose
+          end, because prose is frictionless to write and nothing pushes back.
+          chip is the push-back: find the rung each behavior belongs on, move
+          it there on receipts rather than taste, and move it back when a
+          stronger model reclaims it.
+        </p>
+        <p class="lede">
+          Two ways in. A <a href="#socket">socket</a> seats several
+          implementations behind one function you already have. A
+          <a href="#chip">chip</a> packages the behavior that has earned
+          governance.
+        </p>
+      </div>
+      <div class="install" aria-label="Install">
+<pre class="code"><span class="c"># the contract library</span>
+<span class="prompt">$</span> pip install git+https://github.com/lavallee/chip
 
-      <p class="lede">
-        The idea underneath: the code-vs-model boundary is a position that
-        evidence should move. Start with
-        <a href="https://github.com/lavallee/chip/blob/main/docs/skill-to-chip.md">the ladder</a>,
-        then <a href="https://github.com/lavallee/chip/blob/main/docs/socket.md">the socket</a>
-        and its runner, <a href="https://github.com/lavallee/chipsocket" rel="noopener">chipsocket</a>,
-        which seats several implementations of one contract in code you already have.
-      </p>
-
-      <div class="hero-cta">
-        <a class="btn" href="#install">Get started</a>
-        <a class="btn btn-ghost" href="https://github.com/lavallee/chip" rel="noopener">Read the spec</a>
+<span class="c"># the socket runner</span>
+<span class="prompt">$</span> pip install git+https://github.com/lavallee/chipsocket</pre>
+        <p class="note">Python 3.12+. Neither package is on PyPI yet; the
+          lines above install from source. MIT.</p>
       </div>
     </div>
   </section>
 
-  <section id="what" class="section">
+  <section id="ladder" class="section" aria-labelledby="ladder-h">
     <div class="wrap">
-      <h2>What is a chip</h2>
+      <h2 id="ladder-h">The ladder</h2>
       <p class="section-lede">
-        This repository is the contract itself — the spec, a validation
-        library, and a conformance kit. It is not a runtime, and it has
-        zero runtime dependencies.
+        Six rungs. The early ones evict <em>judgment</em> from the model; the
+        late ones evict <em>governance</em> and <em>teaching</em> as they stop
+        paying for themselves. The goal is not the code end. It is the right
+        rung, and movement runs both ways. Choose a rung to see what it
+        evicts and what stays.
       </p>
 
-      <div class="row-list">
-        <div class="row">
-          <h3>Port</h3>
-          <p>
-            A declared input or output. A chip states up front which
-            ports it reads and which it writes — no implicit signal
-            reads, no surprise side channels.
-          </p>
+      <div class="ladder" role="group" aria-label="The distillation ladder">
+        <ol class="rungs">
+          <li><button type="button" class="rung" data-rung="0" aria-pressed="false">prose skill</button></li>
+          <li><button type="button" class="rung" data-rung="1" aria-pressed="false">thin skill</button></li>
+          <li><button type="button" class="rung" data-rung="2" aria-pressed="true">hybrid chip</button></li>
+          <li><button type="button" class="rung" data-rung="3" aria-pressed="false">deterministic chip</button></li>
+          <li><button type="button" class="rung" data-rung="4" aria-pressed="false">thin skill + CLI</button></li>
+          <li><button type="button" class="rung" data-rung="5" aria-pressed="false">plain code</button></li>
+        </ol>
+        <p class="rail-note" aria-hidden="true">
+          <span class="rail-left">judgment leaves the model</span>
+          <span class="rail-right">governance and teaching leave too</span>
+        </p>
+        <div class="rung-detail" aria-live="polite">
+          <div class="rung-pane" data-rung="0">
+            <h3>Prose skill</h3>
+            <p>A document a model reads before it acts. Everything is in the
+              model: recognition, judgment, process, and the safety gates.
+              Frictionless to write; nothing can falsify it.</p>
+          </div>
+          <div class="rung-pane" data-rung="1">
+            <h3>Thin skill</h3>
+            <p>Typed outputs, and only recognition and interpretation left in
+              prose: knowing when the capability is relevant, conducting the
+              ambiguous dialogue, explaining a receipt. No cursors, no retry
+              loops, no hidden shell state.</p>
+          </div>
+          <div class="rung-pane" data-rung="2">
+            <h3>Hybrid chip</h3>
+            <p>A deterministic envelope around one bounded judgment stage: a
+              request schema in, a result schema out, graded by a held-out
+              suite. This is the rung the socket measures its way toward or
+              away from.</p>
+          </div>
+          <div class="rung-pane" data-rung="3">
+            <h3>Deterministic chip</h3>
+            <p>Every judgment is a rule a fixture can decide. The governance
+              envelope is still here, because the behavior still has a
+              standing relationship, state, or authority to govern.</p>
+          </div>
+          <div class="rung-pane" data-rung="4">
+            <h3>Thin skill plus CLI</h3>
+            <p>Judgment and envelope both gone. A versioned deterministic
+              tool, and a skill that only teaches discovery and invocation.
+              A chip retires here: its fixtures become the tool's ordinary
+              test suite.</p>
+          </div>
+          <div class="rung-pane" data-rung="5">
+            <h3>Plain code</h3>
+            <p>No skill at all. Invoked by system wiring, not by an agent
+              reading prose. Most enforcement-shaped behavior wants to be
+              here, and arriving is success, not a failed decomposition.</p>
+          </div>
         </div>
-        <div class="row">
-          <h3>Stage</h3>
-          <p>
-            A chip running its bounded contract: observe the ports it
-            declared, apply judgment within its own scope, emit a
-            receipt. One promise per stage.
-          </p>
+      </div>
+
+      <p class="aside">
+        Per behavior, one question decides the rung: <strong>can a fixture
+        falsify it?</strong> Yes means code or evaluation material. A
+        bounded, schema-decidable judgment means one gateway stage. Needs
+        situated dialogue means it stays a skill, honestly. The method is
+        <a href="https://github.com/lavallee/chip/blob/main/docs/skill-to-chip.md">skill-to-chip.md</a>;
+        the rubric that turns evidence into a verdict is <code>chip.placement</code>,
+        <a href="#rubric">below</a>.
+      </p>
+    </div>
+  </section>
+
+  <section id="socket" class="section" aria-labelledby="socket-h">
+    <div class="wrap">
+      <h2 id="socket-h">A socket, in one call</h2>
+      <p class="section-lede">
+        A socket is one typed contract with several live implementations
+        seated behind it: deterministic code, a model at some tier, a model at
+        a higher tier, a raw-model baseline. A strategy picks among them per
+        call. Every call writes one receipt saying which member answered, why
+        the earlier ones did not, and what any shadow would have said.
+        Step through one call.
+      </p>
+
+      <div class="call" data-step="0">
+        <div class="call-flow">
+          <svg viewBox="0 0 520 300" role="img" aria-labelledby="flow-title flow-desc">
+            <title id="flow-title">One socket call</title>
+            <desc id="flow-desc">An input enters the socket. The code member abstains with a score. The model member answers and passes the invariants. A gold shadow runs on a sample and disagrees. The answering member is re-run as the noise floor. One receipt and one harvest line are written.</desc>
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0L10 5L0 10z" fill="currentColor"/>
+              </marker>
+            </defs>
+            <!-- socket outline -->
+            <rect class="sock" x="92" y="22" width="336" height="256" rx="6"/>
+            <text class="sock-label" x="106" y="44">socket: claims.admissible</text>
+
+            <!-- input -->
+            <g class="node n-input" data-node="input">
+              <rect x="8" y="118" width="70" height="40" rx="4"/>
+              <text x="43" y="142" text-anchor="middle">claim</text>
+            </g>
+            <path class="edge e-in" d="M78 138H110" marker-end="url(#arr)"/>
+
+            <!-- code member -->
+            <g class="node n-code" data-node="code">
+              <rect x="110" y="110" width="96" height="56" rx="4"/>
+              <text x="158" y="133" text-anchor="middle">code</text>
+              <text class="sub" x="158" y="152" text-anchor="middle">claim-rules</text>
+            </g>
+            <text class="tag t-abstain" x="158" y="186" text-anchor="middle">abstained · 0.41</text>
+            <path class="edge e-abstain" d="M206 138H256" marker-end="url(#arr)"/>
+
+            <!-- model member -->
+            <g class="node n-model" data-node="model">
+              <rect x="256" y="110" width="96" height="56" rx="4"/>
+              <text x="304" y="133" text-anchor="middle">model</text>
+              <text class="sub" x="304" y="152" text-anchor="middle">claims-mid</text>
+            </g>
+            <text class="tag t-value" x="304" y="186" text-anchor="middle">verified</text>
+
+            <!-- shadow -->
+            <path class="edge e-shadow" d="M304 166V206" marker-end="url(#arr)"/>
+            <g class="node n-shadow" data-node="shadow">
+              <rect x="256" y="206" width="96" height="56" rx="4"/>
+              <text x="304" y="229" text-anchor="middle">shadow</text>
+              <text class="sub" x="304" y="248" text-anchor="middle">gold, 3% sample</text>
+            </g>
+            <text class="tag t-disagree" x="372" y="238">dropped</text>
+
+            <!-- noise -->
+            <g class="node n-noise" data-node="noise">
+              <rect x="110" y="206" width="96" height="56" rx="4"/>
+              <text x="158" y="229" text-anchor="middle">noise</text>
+              <text class="sub" x="158" y="248" text-anchor="middle">mid, again</text>
+            </g>
+            <text class="tag t-value t-noise" x="158" y="282" text-anchor="middle">agrees</text>
+
+            <!-- out -->
+            <path class="edge e-out" d="M352 138H444" marker-end="url(#arr)"/>
+            <g class="node n-out" data-node="out">
+              <rect x="444" y="118" width="70" height="40" rx="4"/>
+              <text x="479" y="142" text-anchor="middle">Verdict</text>
+            </g>
+            <text class="tag t-receipt" x="479" y="176" text-anchor="middle">+ receipt</text>
+          </svg>
+
+          <ol class="steps" aria-label="Steps of the call">
+            <li data-step="1">The claim arrives. The contract says: input <code>str</code>, output <code>Verdict</code>, and the reason must be short.</li>
+            <li data-step="2">The code member runs first. It cannot decide this one, so it abstains with its score. An abstention is an answer, not a failure.</li>
+            <li data-step="3">The abstention is the trigger. The model member asks the gateway, parses the result, and the value passes the invariants.</li>
+            <li data-step="4">This call is in the 3% sample, and the daily budget has room, so the gold member runs too. It disagrees. Nothing it said reaches the caller.</li>
+            <li data-step="5">The answering member is run again on the same input. It agrees with itself. That is the floor any disagreement has to clear.</li>
+            <li data-step="6">One receipt lists every attempt, including the one that was replaced. The harvest line weights this input by its deferral and the disagreement.</li>
+          </ol>
+
+          <div class="call-controls">
+            <button type="button" class="btn" data-action="next">Run one step</button>
+            <button type="button" class="btn btn-ghost" data-action="reset">Reset</button>
+            <span class="step-count" aria-live="polite"></span>
+          </div>
         </div>
-        <div class="row">
-          <h3>Circuit</h3>
-          <p>
-            A linear sequence of stages. Each stage consumes the prior
-            stage's ports and produces its own — composition without
-            hidden fan-out.
-          </p>
-        </div>
-        <div class="row">
-          <h3>Binding</h3>
-          <p>
-            The wiring a host supplies at run time: which real data
-            fills which port, and under what policy, for one circuit.
-          </p>
-        </div>
-        <div class="row">
-          <h3>Receipt</h3>
-          <p>
-            The record of a run — including the runs where a chip
-            observed and decided not to act. No silent chips.
-          </p>
-        </div>
-        <div class="row">
-          <h3>Host and gateway</h3>
-          <p>
-            A <strong>host</strong> binds and runs circuits, enforces
-            policy, and persists receipts — fab
-            is a reference implementation. A chip that needs LLM-backed
-            judgment reaches it through a <strong>gateway</strong>
-            rather than holding its own credentials —
-            <a href="https://github.com/lavallee/somm" rel="noopener">somm</a>
-            is a reference implementation. The <strong>owning system</strong>
-            is whatever product or team the host ultimately serves.
-          </p>
-        </div>
+
+        <figure class="receipt" aria-label="The receipt for this call">
+          <pre class="paper"><code><span class="r" data-step="1">{
+  <span class="k">"schema"</span>: <span class="s">"chip.socket-receipt/v0alpha1"</span>,
+  <span class="k">"socket"</span>: <span class="s">"claims.admissible"</span>,
+  <span class="k">"strategy"</span>: <span class="s">"first-success"</span>,</span><span class="r" data-step="2">
+  <span class="k">"attempts"</span>: [
+    { <span class="k">"member"</span>: <span class="s">"code:claim-rules@sha256:…"</span>,
+      <span class="k">"trigger"</span>: <span class="s">"primary"</span>, <span class="k">"outcome"</span>: <span class="s">"abstained"</span>,
+      <span class="k">"reason"</span>: <span class="s">"no-entity-no-number"</span>, <span class="k">"score"</span>: 0.41,
+      <span class="k">"latencyMs"</span>: 2, <span class="k">"costUsd"</span>: 0 },</span><span class="r" data-step="3">
+    { <span class="k">"member"</span>: <span class="s">"model:claims-mid@sha256:…"</span>,
+      <span class="k">"trigger"</span>: <span class="s">"abstained"</span>, <span class="k">"outcome"</span>: <span class="s">"value"</span>,
+      <span class="k">"value"</span>: { <span class="k">"verdict"</span>: <span class="s">"verified"</span>,
+                 <span class="k">"reason"</span>: <span class="s">"…"</span> },
+      <span class="k">"tuple"</span>: <span class="s">"ollama/qwen2.5:7b@claims-mid"</span>,
+      <span class="k">"latencyMs"</span>: 812, <span class="k">"costUsd"</span>: 0.00012 }
+  ],
+  <span class="k">"answeredBy"</span>: <span class="s">"model:claims-mid@sha256:…"</span>,</span><span class="r" data-step="4">
+  <span class="k">"shadows"</span>: [
+    { <span class="k">"member"</span>: <span class="s">"model:claims-gold@sha256:…"</span>,
+      <span class="k">"trigger"</span>: <span class="s">"sampled"</span>, <span class="k">"outcome"</span>: <span class="s">"value"</span>,
+      <span class="k">"agrees"</span>: <span class="b">false</span>, <span class="k">"costUsd"</span>: 0.0031 }
+  ],</span><span class="r" data-step="5">
+  <span class="k">"noise"</span>: { <span class="k">"member"</span>: <span class="s">"model:claims-mid@sha256:…"</span>,
+             <span class="k">"outcome"</span>: <span class="s">"value"</span>, <span class="k">"agrees"</span>: <span class="b">true</span> },</span><span class="r" data-step="6">
+  <span class="k">"terminalReason"</span>: <span class="s">"answered-by-model"</span>,
+  <span class="k">"cost"</span>: { <span class="k">"usd"</span>: 0.00334 },
+  <span class="k">"harvest"</span>: <span class="s">"harvest:claims.admissible#srun_…"</span>
+}
+<span class="c">// harvest weight 4 = 1 + 1 deferral
+//                  + 2 disagreement</span></span></code></pre>
+          <figcaption>Shape per <a href="https://github.com/lavallee/chip/blob/main/docs/socket.md">socket.md</a>; the schema is <code>v0alpha1</code> and will change.</figcaption>
+        </figure>
+      </div>
+
+      <div class="vocab">
+        <dl>
+          <div>
+            <dt>Member</dt>
+            <dd>One implementation of the contract: <span class="k-code">code</span>,
+              <span class="k-model">model</span>, or <span class="k-model">baseline</span>
+              (the raw model, kept as a standing comparator). A member returns
+              a value, an abstention with a reason and an optional score, or a
+              typed failure: <code>schema</code> or <code>transport</code>.
+              Anything else it raises is recorded as <code>error</code> and the
+              chain moves on.</dd>
+          </div>
+          <div>
+            <dt>Strategy</dt>
+            <dd><code>first-success</code> runs the chain in order and escalates
+              on abstention, invariant, schema, transport, or error.
+              <code>shadow</code> members run on a sample under a daily budget
+              and never answer. A <code>canary</code> is placed first on a
+              fraction of calls, a policy an operator sets and never a default.
+              The <code>noise</code> flag re-runs the answering member.</dd>
+          </div>
+          <div>
+            <dt>Trigger</dt>
+            <dd>Why a member ran, from a closed list: <code>primary</code>,
+              <code>abstained</code>, <code>invariant</code>, <code>schema</code>,
+              <code>transport</code>, <code>error</code>, <code>budget</code>,
+              <code>sampled</code>. Two of them are about the boundary
+              (<code>abstained</code>, <code>invariant</code>); the rest are
+              operations. Keeping them apart is what lets a report tell a
+              placement finding from a gateway problem.</dd>
+          </div>
+          <div>
+            <dt>Clean</dt>
+            <dd>A hook that declares what a receipt may hold. One production
+              socket reduces a pair of headlines to two URL keys, two domains,
+              and a score before anything is written. GitHub Scientist's
+              <code>clean</code> is the precedent.</dd>
+          </div>
+        </dl>
       </div>
     </div>
   </section>
 
-  <section id="install" class="section section-alt">
+  <section id="measures" class="section" aria-labelledby="measures-h">
     <div class="wrap">
-      <h2>Install</h2>
-
-<pre class="code"><span class="c"># contract + validation only:</span>
-<span class="prompt">$</span> pip install chipspec
-
-<span class="c"># + schema validation for port payloads:</span>
-<span class="prompt">$</span> pip install <span class="str">"chipspec[jsonschema]"</span></pre>
-
+      <h2 id="measures-h">What the receipts tell you</h2>
       <p class="section-lede">
-        Python 3.12+. The import package is <code>chip</code> — the
-        distribution is named <code>chipspec</code> on PyPI because
-        <code>chip</code> is squatted.
+        <code>chipsocket report receipts.jsonl</code> folds the receipts into
+        four numbers a socket can state about itself. It gathers nothing; it
+        is a fold over records.
       </p>
+
+      <table class="measures">
+        <thead>
+          <tr><th scope="col">Measure</th><th scope="col">Answers</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Closed by code</th>
+            <td>What share of inputs the code member answered without abstaining. The honest cost of the model is one minus this.</td>
+          </tr>
+          <tr>
+            <th scope="row">Escalations, by cause</th>
+            <td>The trigger histogram split into boundary (<code>abstained</code>, <code>invariant</code>) and operations (<code>schema</code>, <code>transport</code>, <code>error</code>, <code>budget</code>), with the dominant side named. Operations dominant is a gateway problem, not a placement finding.</td>
+          </tr>
+          <tr>
+            <th scope="row">Agreement, net of noise</th>
+            <td>Per shadow: how often it agreed with the answering member, minus that member's own self-disagreement on the same sample. Broken down by which kind of member answered, because agreeing with code on the inputs it closed is a different fact from agreeing with the model on the ones it did not.</td>
+          </tr>
+          <tr>
+            <th scope="row">The band</th>
+            <td>With labels: where the scoring member abstained, what was the truth, by score bucket. The lowest bucket that clears the precision you want is where code could stop abstaining.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <h3>Why the noise floor is not optional</h3>
+        <p>A model member is nondeterministic at any temperature that
+          matters, so a shadow mismatch with no same-member repeat is
+          evidence of sampling, not of disagreement. Twitter's Diffy
+          multicast every request to a candidate, a primary, and a second
+          copy of the primary, and reported only differences larger than
+          primary-versus-copy. The <code>noise</code> flag is that
+          instrument, and it is why a 3% gold shadow cannot produce a
+          confident wrong promotion.</p>
+      </div>
     </div>
   </section>
 
-  <section id="principles" class="section">
+  <section id="plug" class="section" aria-labelledby="plug-h">
     <div class="wrap">
-      <h2>Design principles</h2>
+      <h2 id="plug-h">Plug it in</h2>
+      <p class="section-lede">
+        You have a function that decides something, and somewhere in it a
+        model gets asked. Declare the contract on the function. It keeps
+        answering exactly as it did; what changes is that every call is
+        receipted, and other members can be seated behind it.
+      </p>
 
-      <ul class="bulleted">
-        <li><strong>One promise per chip.</strong> A chip declares one
-          bounded job and does only that job.</li>
-        <li><strong>Deterministic envelope around probabilistic
-          judgment.</strong> LLM-backed decisions live inside a fixed,
-          inspectable shape — ports, policy gates, and receipts don't
-          get to be probabilistic too.</li>
-        <li><strong>Authority fails closed.</strong> No implicit
-          escalation. Absent explicit policy grant, a chip acts as if
-          it has none.</li>
-        <li><strong>Receipts for every run, including quiet
-          ones.</strong> A chip that observes and decides not to act
-          still produces a receipt saying so.</li>
-        <li><strong>Taint is transitive.</strong> Anything a chip's
-          judgment touches carries forward whatever provenance or trust
-          constraints it entered with.</li>
-        <li><strong>Targets own final deduplication.</strong> A chip
-          proposes; whatever system it writes into is the one source of
-          truth for whether that write is new.</li>
+      <div class="code-notes">
+<pre class="code"><code><span class="kw">from</span> chipsocket <span class="kw">import</span> Abstain, contract, model
+
+<span class="dec">@contract</span>(input=str, output=Verdict, invariants=[reason_is_short],
+          sink=<span class="s">"receipts.jsonl"</span>, harvest=<span class="s">"harvest.jsonl"</span>)
+<span class="kw">def</span> admissible(claim: str) -> Verdict | Abstain:
+    ...    <span class="c"># your existing code, unchanged; return Abstain("band", score=s)</span>
+           <span class="c"># where it used to call the model</span>
+
+admissible.member(model(gateway, prompt=render, result=Verdict, profile=<span class="s">"claims-mid"</span>))
+admissible.shadow(model(gateway, prompt=render, result=Verdict, profile=<span class="s">"claims-gold"</span>),
+                  sample=0.03, budget_usd_daily=2.0, noise=<span class="b">True</span>)
+
+verdict = admissible(claim)    <span class="c"># code first; model on abstain; gold shadows 3%</span></code></pre>
+        <ul class="notes">
+          <li>The decorated function is the first <span class="k-code">code</span> member. Its answers do not change.</li>
+          <li>The score beside an abstention is whatever ordering the code already had: a similarity, a margin, a relevance. It is what lets the band be learned instead of guessed.</li>
+          <li><code>gateway</code> is any <code>gateway(request) -&gt; result</code>. With somm it is <code>SommGateway(project, workload)</code>, so cost and provenance land in the ledger you already keep. With TypeSafe it asks Jev typed questions and returns probabilities a parser can abstain on.</li>
+          <li>The shadow is sampled, budgeted in dollars per day, and never reaches the caller.</li>
+        </ul>
+      </div>
+
+      <h3>Phase 0: already in production? Change nothing.</h3>
+      <p>Do not re-run the incumbent. Seat the verdict it already wrote as
+        the primary member, at zero extra cost, and let candidates shadow it.
+        The receipts start accumulating before anything is promoted.</p>
+<pre class="code"><code><span class="kw">from</span> chipsocket <span class="kw">import</span> Socket, code, model, recorded
+
+s = Socket(<span class="s">"lane.verdict"</span>, output=Verdict, sink=<span class="s">"receipts.jsonl"</span>, clean=redact)
+s.member(recorded(<span class="kw">lambda</span> row: row.incumbent, id=<span class="s">"incumbent"</span>, digest=TREATMENT_SHA, kind=<span class="s">"model"</span>))
+s.shadow(code(rules), sample=1.0)                 <span class="c"># free, every row</span>
+s.shadow(model(gold_gateway, prompt=render, result=Verdict, profile=<span class="s">"gold"</span>),
+         sample=0.03, budget_usd_daily=0.5, noise=<span class="b">True</span>)</code></pre>
+
+      <h3>Then learn the band, and receipt what was learned</h3>
+      <p>Once labels exist for some receipts, <code>cuts</code> finds the
+        widest band at each end of one member's score where a constant
+        answer meets a precision bar, and <code>cut_member</code> turns that
+        into a code member whose digest includes the evidence it was learned
+        from. A member re-learned from a different day is a different member
+        on the receipts.</p>
+
+      <figure class="cuts" aria-labelledby="cuts-cap">
+        <svg viewBox="0 0 640 150" role="img" aria-label="A lexical score from 0 to 1 with cuts at 0.15 and 0.75. Below 0.15 the constant answer DIFFERENT is right 96.8% of the time against the model's 90.6%. At or above 0.75 the constant SAME is right 99.2% against 98.8%. Between the cuts the model is asked.">
+            <g class="axis">
+              <line x1="40" y1="78" x2="600" y2="78"/>
+              <text x="40" y="100" text-anchor="middle">0</text>
+              <text x="320" y="100" text-anchor="middle">0.5</text>
+              <text x="600" y="100" text-anchor="middle">1</text>
+              <text class="axis-label" x="320" y="124" text-anchor="middle">lexical score of a headline pair</text>
+            </g>
+            <rect class="band band-code" x="40" y="60" width="84" height="18"/>
+            <rect class="band band-model" x="124" y="60" width="336" height="18"/>
+            <rect class="band band-code" x="460" y="60" width="140" height="18"/>
+            <g class="cut">
+              <line x1="124" y1="34" x2="124" y2="86"/>
+              <text x="124" y="26" text-anchor="middle">0.15</text>
+            </g>
+            <g class="cut">
+              <line x1="460" y1="34" x2="460" y2="86"/>
+              <text x="460" y="26" text-anchor="middle">0.75</text>
+            </g>
+            <text class="band-text" x="82" y="52" text-anchor="middle">always DIFFERENT</text>
+            <text class="band-text band-text-model" x="292" y="52" text-anchor="middle">ask the model</text>
+            <text class="band-text" x="530" y="52" text-anchor="middle">always SAME</text>
+        </svg>
+        <figcaption id="cuts-cap">
+          A same-event judge on a local 7B model, about 18,000 receipts a day.
+          On one hand-labelled day, below 0.15 the constant answer was right
+          96.8% of the time against the model's 90.6%; at or above 0.75 it was
+          right 99.2% against 98.8%. Code closes about half the population more
+          accurately than the model it replaces, and the model is asked only
+          where it earns the call. One day is a hypothesis: the member is
+          seated as a shadow until a second labelled day's cuts agree.
+        </figcaption>
+      </figure>
+
+<pre class="code"><code><span class="prompt">$</span> chipsocket cuts receipts/ --truth labels.json --key input.id --scorer prefilter --min-n 200
+<span class="c">{ "lo": 0.15, "hi": 0.75, "closes": 0.49, "evidence": "sha256:…", "below": {…}, "above": {…} }</span>
+
+<span class="kw">from</span> chipsocket <span class="kw">import</span> cut_member, cuts, load_receipts
+c = cuts(load_receipts(<span class="s">"receipts/"</span>), truth, key=<span class="kw">lambda</span> r: r[<span class="s">"input"</span>][<span class="s">"id"</span>],
+         scorer=<span class="s">"prefilter"</span>, precision=0.95, min_n=200)
+s.shadow(cut_member(<span class="kw">lambda</span> p: p.lexical, c, negative=<span class="b">False</span>, positive=<span class="b">True</span>, id=<span class="s">"lexical-cuts"</span>))</code></pre>
+
+      <p class="aside">Promotion is a rung transition and is gated the way the
+        ladder already says: non-inferior on a held-out suite drawn from the
+        harvest. Demotion is a circuit breaker: a promoted code member that
+        fails an invariant on a live call goes back to shadow on that call. A
+        member moves down on one piece of evidence and up on a suite. The
+        runner does neither for you; it records.</p>
+    </div>
+  </section>
+
+  <section id="chip" class="section" aria-labelledby="chip-h">
+    <div class="wrap two-col">
+      <div>
+        <h2 id="chip-h">When it becomes a chip</h2>
+        <p>A socket has no standing observation relationship, no cross-run
+          state, and no authority. It is called; it answers; it records. By
+          the admission rule that makes it a tool, and that is correct. The
+          socket is the primitive below chip.</p>
+        <p>A behavior is admissible as a chip only if <strong>both</strong>
+          hold: it declares an ongoing observation relationship to a signal
+          class, or owns durable cross-run state; <strong>and</strong> it
+          produces a bounded response under an authority contract. Most
+          things should not be chips, and the skill that decides says so
+          first.</p>
+        <p>A chip is a socket seated in an envelope.</p>
+      </div>
+      <dl class="envelope">
+        <div><dt>Promise</dt><dd>One bounded operational job, stated in a sentence that needs no "and".</dd></div>
+        <div><dt>Ports</dt><dd>The inputs it reads and outputs it writes, each with a versioned schema. Chips compose into linear circuits by matching ports.</dd></div>
+        <div><dt>Stages</dt><dd>Code, at most one gateway judgment, and policy. The stages are implementation; the promise is the contract.</dd></div>
+        <div><dt>State</dt><dd>Single-flight for anything with a cursor; partitioned by a declared key for map and cache shapes.</dd></div>
+        <div><dt>Effects and authority</dt><dd>Effect classes observe, synthesize, experiment, draft, promote. Effective authority is chip ∩ circuit ∩ binding ∩ host ∩ approval, and it fails closed.</dd></div>
+        <div><dt>Receipts</dt><dd>One for every run, including the quiet ones where it observed and did nothing. Taint is transitive. Targets own final deduplication.</dd></div>
+      </dl>
+    </div>
+    <div class="wrap">
+      <p class="aside">Hosts bind and run circuits. The reference host is
+        <a href="https://github.com/lavallee/fab" rel="noopener">fab</a>; the
+        second host, and the proof that the contract is portable, is the
+        socket runner itself. The spec is
+        <a href="https://github.com/lavallee/chip/blob/main/spec/chip-spec.md">chip-spec.md</a>,
+        normative only.</p>
+    </div>
+  </section>
+
+  <section id="rubric" class="section" aria-labelledby="rubric-h">
+    <div class="wrap">
+      <h2 id="rubric-h">The rubric</h2>
+      <p class="section-lede">
+        <code>chip.placement</code> takes an evidence record about one observed
+        behavior and returns a verdict, a confidence, and the measures it
+        relied on. It is pure and gathers nothing; a scanner is not portable,
+        the rubric is. Six rules survived a hand-run over 1.1 million
+        production calls across 113 workloads, and only those are encoded.
+      </p>
+      <ol class="rules">
+        <li><strong>Admission first, scoring second.</strong> Standing versus burst is decided before anything is scored, and rules out roughly a third of a real fleet without judgment.</li>
+        <li><strong>Time series, not aggregates.</strong> Evidence is built from daily observations; there is no constructor for a pre-summarized row. A 51-day aggregate hid a 10-day incident.</li>
+        <li><strong>Never rank by cost.</strong> The largest observed loss was 495,130 calls that never reached a provider, invisible to any cost-ranked detector, and it cost nothing.</li>
+        <li><strong>Repetition routes the ladder.</strong> Novel input every time is extraction and distils toward a thin skill plus a CLI; recurring input over a standing relationship is what a chip rung is for.</li>
+        <li><strong>The failure motif separates the envelope from the judgment.</strong> Terminal envelope failure means an observer or a parser, not a judgment chip.</li>
+        <li><strong>Undecidable is a verdict.</strong> When evidence cannot decide, the rubric says so and names what is missing.</li>
+      </ol>
+      <p>Verdicts are a closed vocabulary: <code>observer</code>, <code>mint</code>,
+        <code>parser</code>, <code>no-standing-relationship</code>,
+        <code>no-judgment-stage</code>, <code>undecidable</code>. The negatives
+        are the point. On a real fleet most subjects are not chip-shaped, and a
+        rubric that only emits positives is an advocacy tool.</p>
+    </div>
+  </section>
+
+  <section id="agents" class="section" aria-labelledby="agents-h">
+    <div class="wrap two-col">
+      <div>
+        <h2 id="agents-h">For coding agents</h2>
+        <p>The lifecycle ships as eight skills in the <code>chip-contract</code>
+          plugin. The same bytes ship inside the <code>chipspec</code> package.
+          No service, no credentials; <code>chip</code> and
+          <code>chipsocket</code> are commands over local packages and
+          receipts.</p>
+<pre class="code"><code><span class="c"># Claude Code</span>
+/plugin marketplace add lyra-forge/marketplace
+/plugin install chip-contract@lyra-forge
+
+<span class="c"># Codex</span>
+codex plugin marketplace add lyra-forge/marketplace
+codex plugin add chip-contract@lyra-forge</code></pre>
+      </div>
+      <dl class="skills">
+        <div><dt>chip-candidate</dt><dd>Is this a chip, a tool, a dialogic skill, or doctrine? Invoke before authoring anything.</dd></div>
+        <div><dt>chip-socket</dt><dd>Seat a function's code-or-model decision in a socket; phase 0; learn the cuts.</dd></div>
+        <div><dt>chip-author</dt><dd>One promise, typed ports, declared state and authority.</dd></div>
+        <div><dt>chip-fixtures</dt><dd>The suite that can fail, and later gates authority.</dd></div>
+        <div><dt>chip-evaluate</dt><dd>Run the held-out suite and record the evaluated tuple.</dd></div>
+        <div><dt>chip-install</dt><dd>Install so it actually resolves where activations run.</dd></div>
+        <div><dt>chip-audit</dt><dd>The silent failures: pinned at observe, never activated, quiet forever.</dd></div>
+        <div><dt>chip-outcome</dt><dd>Close the loop from a judgment to what happened next.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="field" class="section" aria-labelledby="field-h">
+    <div class="wrap">
+      <h2 id="field-h">Where this sits</h2>
+      <ul class="field">
+        <li><a href="https://github.com/Parcha-ai/agentrun" rel="noopener">AgentRun</a> is a workflow graph above the call, with Jev as a typed judge node. chip refuses graph semantics; the socket is the primitive below one call. A Jev judge is a model member here, and the two compose.</li>
+        <li>LiteLLM and Ramp ship shadow routers that run a candidate on sampled traffic and judge blind. Neither measures the noise floor.</li>
+        <li>RouteLLM and cascade routers choose a model by predicted difficulty. The socket's first member is code that abstains, and the band is read off labels.</li>
+        <li>Diffy and GitHub Scientist are the precedents for the noise floor and the <code>clean</code> hook.</li>
       </ul>
+      <p class="aside">The full survey, with the research on abstention,
+        learning to defer, and judge reliability, is
+        <a href="https://github.com/lavallee/chip/blob/main/docs/related-work.md">related-work.md</a>.</p>
     </div>
   </section>
 
-  <section class="section section-alt">
-    <div class="wrap">
-      <h2>Status</h2>
-      <p class="section-lede">
-        v0 experiment — two hosts (fab, and the socket runner chipsocket),
-        contract under active evolution. See
-        <a href="https://github.com/lavallee/chip/blob/main/spec/chip-spec.md">spec/chip-spec.md</a>
-        for the current spec and
-        <a href="https://github.com/lavallee/chip/blob/main/CHANGELOG.md">CHANGELOG.md</a>
-        for the release log. MIT licensed.
-      </p>
-      <p><a class="btn" href="https://github.com/lavallee/chip" rel="noopener">Star on GitHub →</a></p>
+  <section id="status" class="section" aria-labelledby="status-h">
+    <div class="wrap two-col">
+      <div>
+        <h2 id="status-h">Where it stands</h2>
+        <p>A v0 experiment. chip 0.4.0 tracks spec 0.6.0. One reference host
+          and one runner. Two production sockets feed receipts: the same-event
+          judge above, and a phase-0 pilot on claim admissibility that shadows
+          a recorded incumbent. Neither package is on PyPI yet.</p>
+        <p>The conditions under which this program should be narrowed or
+          stopped are public: if the pilots do not beat skill-only baselines,
+          if no second host can implement the contract without the first
+          host's internals, if a frontier model with raw typed tools matches a
+          chip on held-out work. A spec that cannot say how it would be
+          proven wrong is advertising.</p>
+      </div>
+      <div>
+        <h3>Read next</h3>
+        <ul class="next">
+          <li><a href="https://github.com/lavallee/chip/blob/main/README.md">README</a>: the two ways in, in order</li>
+          <li><a href="https://github.com/lavallee/chip/blob/main/docs/skill-to-chip.md">skill-to-chip.md</a>: the ladder and the per-behavior test</li>
+          <li><a href="https://github.com/lavallee/chip/blob/main/docs/socket.md">socket.md</a>: the socket design note</li>
+          <li><a href="https://github.com/lavallee/chipsocket" rel="noopener">chipsocket</a> and its <a href="https://github.com/lavallee/chipsocket/blob/main/AGENTS.md" rel="noopener">AGENTS.md</a>: the runner, and what an agent should know first</li>
+          <li><a href="https://github.com/lavallee/chip/blob/main/spec/chip-spec.md">chip-spec.md</a>: the normative contract</li>
+          <li><a href="https://github.com/lavallee/chip/blob/main/docs/related-work.md">related-work.md</a>: the field</li>
+          <li><a href="https://github.com/lavallee/chip/blob/main/ROADMAP.md">ROADMAP.md</a>: the sequenced bets</li>
+          <li><a href="https://github.com/lavallee/chip/blob/main/docs/falsification.md">falsification.md</a>: how it would be proven wrong</li>
+        </ul>
+      </div>
     </div>
   </section>
 </main>
@@ -193,11 +612,13 @@ print(chip.__version__)
     <p>
       chip · <a href="https://github.com/lavallee/chip" rel="noopener">source</a> ·
       <a href="https://github.com/lavallee/chip/blob/main/LICENSE">MIT license</a> ·
-      <a href="https://github.com/lavallee/chip/blob/main/CHANGELOG.md">changelog</a>
+      <a href="https://github.com/lavallee/chip/blob/main/CHANGELOG.md">changelog</a> ·
+      <a href="https://github.com/lavallee/chipsocket" rel="noopener">chipsocket</a>
     </p>
     <p class="tiny">A contract, not a platform.</p>
   </div>
 </footer>
 
+<script src="site.js"></script>
 </body>
 </html>

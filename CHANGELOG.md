@@ -4,6 +4,15 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Changed
+
+- The GitHub Pages site (`docs/index.html`, `docs/style.css`, `docs/site.js`)
+  is now the explainer: the ladder as a diagram, one socket call stepped
+  through with its receipt printing beside it, the four measures and the noise
+  floor, plug-in code with phase 0 and the learned cuts, the admission rule,
+  the rubric, the plugin for agents, related work, and an honest status.
+  Static, no build step, no external scripts.
+
 ## [0.4.0] — 2026-10-12
 
 The release that leads with the ladder. The placement rubric, the socket design
