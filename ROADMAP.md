@@ -155,8 +155,11 @@ cut than the first day, so the typed band stayed at the intersection. The
 exercise also caught a wrong criterion in the learner (cumulative rather than
 per-bucket precision; fixed in chipsocket 0.2.1). The member is seated in
 gabe's chain ahead of the model as `cut_member` on a `Cuts` whose evidence
-joins both days' digests. What remains is the next day: re-learn, compare the
-digest, move the cuts only if both days agree.
+joins every labelled day's digest. A third day (2026-10-10, a Saturday)
+re-learned the lower cut exactly and rejected the lower upper cut the second
+day would have allowed, which is the conservative-intersection rule doing its
+job. What remains is routine: each new day re-learns, the digest is compared,
+and the cuts move only when every day agrees.
 
 **Boundary:** the learner reads scores and labels and emits cuts. It does not
 train a router, fit a classifier, or touch a prompt; that is what the
