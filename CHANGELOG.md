@@ -6,6 +6,9 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ### Changed
 
+- `ROADMAP.md` item 6 (learn the band, then receipt what was learned) is
+  marked graduated: gabe's second labelled day went through the tool and the
+  learned member is seated in its chain ahead of the model.
 - The GitHub Pages site (`docs/index.html`, `docs/style.css`, `docs/site.js`)
   is now the explainer: the ladder as a diagram, one socket call stepped
   through with its receipt printing beside it, the four measures and the noise

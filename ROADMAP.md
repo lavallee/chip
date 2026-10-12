@@ -149,6 +149,15 @@ is correction by supersession.
 through the tool, not by hand, and the member's digest changes with the
 evidence.
 
+**Status (2026-10-12):** graduated. The second day (2026-10-08) went through
+`chipsocket.learn.cuts`; it confirmed the lower cut and allowed a lower upper
+cut than the first day, so the typed band stayed at the intersection. The
+exercise also caught a wrong criterion in the learner (cumulative rather than
+per-bucket precision; fixed in chipsocket 0.2.1). The member is seated in
+gabe's chain ahead of the model as `cut_member` on a `Cuts` whose evidence
+joins both days' digests. What remains is the next day: re-learn, compare the
+digest, move the cuts only if both days agree.
+
 **Boundary:** the learner reads scores and labels and emits cuts. It does not
 train a router, fit a classifier, or touch a prompt; that is what the
 neighbours in [`docs/related-work.md`](./docs/related-work.md) are for.
