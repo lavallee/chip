@@ -7,6 +7,10 @@ The sequenced bets. Distinct from [`docs/falsification.md`](./docs/falsification
 Nothing here is committed to a date. Two of these have a clock on them, and
 that is said where it is true.
 
+Numbers are stable identifiers, not a sequence: item 3 (lead with the ladder)
+shipped and was moved to the changelog, and the gap stays so that references
+to items by number elsewhere keep meaning what they meant.
+
 ## Where the project actually stands
 
 Spec 0.6.0 cut surface that production disproved and moved everything
@@ -24,6 +28,12 @@ The same day added a primitive *below* chip, the socket
 implementations, a runtime strategy, and a receipt per call. It reshapes items
 2 and 4 below and is the plug-into-existing-code path the review said was
 missing.
+
+As of 2026-10-12 the socket runner has live receipts: gabe's same-event judge
+writes about 18,000 a day through it, and barnowl runs a phase-0 pilot on its
+claim-verification lane. `chipspec` itself is still not on PyPI — the
+trusted-publisher registration for `lavallee/chip` is the one external step
+only the owner can take, and it is pending.
 
 ## 1. Say what makes an evaluation suite adequate
 
@@ -55,37 +65,23 @@ within a year, chips become a fab feature and the portability claim is retired.
 That is the thesis test, and the clock is running.
 
 The fastest path is not more contract surface. It is the smallest runner that
-can execute *anything*. As of 2026-09-16 that runner is the socket runner
-([`docs/socket.md`](./docs/socket.md)): an in-process library that holds a
-contract's members, applies a strategy, writes receipts and harvest, and
-depends on `chipspec` and nothing else. It is materially different from fab
-because it is a library inside an ordinary program, not a scheduled owning
-system.
+can execute *anything*. That runner exists:
+[`chipsocket`](https://github.com/lavallee/chipsocket), the socket runner
+described in [`docs/socket.md`](./docs/socket.md). It holds a contract's
+members, applies a strategy, writes receipts and harvest, passes its own test
+suite, and depends on `chipspec` and nothing else. It never imports fab, which
+is what makes it materially different: a library inside an ordinary program,
+not a scheduled owning system.
 
-**Graduation:** a second implementation passes the conformance kit without
-importing fab, and open question #2 ("what is the smallest second-host
-conformance API") can be answered with a number instead of a guess.
+**Graduation (remaining):** the runner passes the conformance kit
+(`chip.conformance`) rather than only its own suite, and ships as a tagged
+release on PyPI beside `chipspec`. Open question #2 ("what is the smallest
+second-host conformance API") is then answered with a number.
 
 **Boundary (revised):** the earlier boundary — a proof, not a product,
 uncomfortable to use — is withdrawn. The proof and the adoption path are the
 same artifact, as long as the conformance kit is still what it passes and it
 never grows a scheduler, policy gate, or custody store.
-
-## 3. Lead with the ladder
-
-**The problem.** The repository's normative weight is a packaging and
-governance contract, and its most interesting idea — that the code-vs-model
-boundary is a *position that evidence should move*, in both directions — lives
-in one non-normative doc a reader reaches last, if ever. §7 hits a newcomer
-with SBOM requirements before they have met the idea.
-
-The spec should stay normative-only; 0.6 was right to hollow it out. The fix is
-above the spec, not inside it: publish
-[`docs/skill-to-chip.md`](./docs/skill-to-chip.md) as a standalone essay with
-the distillation ladder as its figure, and let the README lead with that rather
-than with the package layout.
-
-**Graduation:** a reader who arrives cold meets the ladder before the manifest.
 
 ## 4. Close the placement loop
 
@@ -103,10 +99,15 @@ itself: gather evidence, run the rubric, commission candidates through
 report rather than an expedition.
 
 For a socketed workload the loop closes by construction: every receipt
-records which member answered, why, and what the shadow said, so the measures
-the rubric needs are produced by the call rather than reconstructed from a
-ledger afterwards. The first socket pilot (a claim-admissibility judgment,
-[`docs/socket.md`](./docs/socket.md) §Pilot) is the test of that claim.
+records which member answered, why, and what the shadow said, and
+`chipsocket.report.summarize` folds a receipt file into the measures the
+rubric reads — closed-by-code share, boundary versus operations triggers,
+shadow agreement net of noise. What remains is the bridge: a function that
+turns a receipt stream into `chip.placement.PlacementEvidence` (a daily series
+of calls, failures, and envelope failures, plus distinct inputs) so a socket's
+placement verdict is one call away from its receipts. The first socket pilot
+(a claim-admissibility judgment, [`docs/socket.md`](./docs/socket.md) §Pilot)
+is the test of that claim.
 
 **Graduation:** a placement report is regenerable on demand and its verdicts
 are traceable to the receipts that produced them.
@@ -127,6 +128,30 @@ Judgment chips wait on harvested fixtures and on item 1.
 
 **Graduation:** the two pilots in [`docs/pilots.md`](./docs/pilots.md) clear
 their bar against a skill-only baseline.
+
+## 6. Learn the band, then receipt what was learned
+
+**The problem.** The first learned code member exists — gabe's lexical cuts
+(answer DIFFERENT below 0.15, SAME at or above 0.75, abstain between) — and it
+was derived by a script over one labelled day and typed into the module as two
+constants. The evidence that produced the boundary is not attached to the
+member that enforces it, so a second labelled day that moves the cuts has
+nothing to supersede but a comment.
+
+chipsocket 0.2 ships `learn.cuts` (the cut points where a constant beats the
+model at a stated precision, read off receipts and labels) and `cut_member`
+(a `code` member built from those cuts whose digest includes the digest of the
+receipts and labels it was learned from). A learned member is then a receipted
+artifact like any other: where it came from is on the record, and replacing it
+is correction by supersession.
+
+**Graduation:** a second labelled day in gabe confirms or moves the cuts
+through the tool, not by hand, and the member's digest changes with the
+evidence.
+
+**Boundary:** the learner reads scores and labels and emits cuts. It does not
+train a router, fit a classifier, or touch a prompt; that is what the
+neighbours in [`docs/related-work.md`](./docs/related-work.md) are for.
 
 ## Not planning
 

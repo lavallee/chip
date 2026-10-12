@@ -28,6 +28,7 @@ EXPECTED = {
     "chip-install",
     "chip-audit",
     "chip-outcome",
+    "chip-socket",
 }
 
 

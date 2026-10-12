@@ -6,6 +6,11 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ### Added
 
+- `chip-socket`, the eighth agent skill: when an existing function's
+  code-or-model decision is a socket, the smallest correct change, phase 0 in
+  production, keeping paid members inside the band, learning the cuts from
+  labelled receipts, and carrying the verdict into `chip-candidate`. Shipped
+  under `src/chip/skills/` and mirrored to the plugin tree.
 - `chip.placement` — the placement rubric for the distillation ladder
   (`docs/skill-to-chip.md`): `PlacementEvidence` / `DayObservation` in,
   a `Placement` verdict plus the `Reason`s that produced it out. Pure and
@@ -17,6 +22,19 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
   1.1M production calls; evidence is only constructible from a daily series
   because aggregates produced a wrong verdict during it.
 - `PlacementError` (`CHIP_PLACEMENT_ERROR`).
+- `docs/socket.md` — the socket design note (one contract, several live
+  implementations). Restored from the rescued checkout: the two commits that
+  added it on 2026-09-16 were missing from this clone.
+- `docs/related-work.md` — where the socket and the ladder sit beside workflow
+  DSLs, shadow evaluation, routers and cascades, judge-reliability work,
+  decision models, and typed-output optimizers.
+
+### Changed
+
+- The README leads with the distillation ladder and the socket before the
+  manifest (roadmap item 3, now shipped and removed from `ROADMAP.md`). The
+  install section says plainly that `chipspec` is not yet on PyPI and gives
+  the from-source line.
 
 ## [0.3.0] — 2026-07-25
 

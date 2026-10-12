@@ -17,7 +17,7 @@
   <div class="wrap">
     <a class="logo" href="./">
       <span class="mark">chip</span>
-      <span class="mark-sub">/ v0.1.0 experiment</span>
+      <span class="mark-sub">/ v0 experiment · spec 0.6</span>
     </a>
     <nav>
       <a href="#what">what</a>
@@ -45,6 +45,15 @@ import chip
 print(chip.__version__)
 "</span>
 <span class="c">→ 0.1.0</span></pre>
+
+      <p class="lede">
+        The idea underneath: the code-vs-model boundary is a position that
+        evidence should move. Start with
+        <a href="https://github.com/lavallee/chip/blob/main/docs/skill-to-chip.md">the ladder</a>,
+        then <a href="https://github.com/lavallee/chip/blob/main/docs/socket.md">the socket</a>
+        and its runner, <a href="https://github.com/lavallee/chipsocket" rel="noopener">chipsocket</a>,
+        which seats several implementations of one contract in code you already have.
+      </p>
 
       <div class="hero-cta">
         <a class="btn" href="#install">Get started</a>
@@ -167,7 +176,7 @@ print(chip.__version__)
     <div class="wrap">
       <h2>Status</h2>
       <p class="section-lede">
-        v0 experiment — one host (fab),
+        v0 experiment — two hosts (fab, and the socket runner chipsocket),
         contract under active evolution. See
         <a href="https://github.com/lavallee/chip/blob/main/spec/chip-spec.md">spec/chip-spec.md</a>
         for the current spec and
