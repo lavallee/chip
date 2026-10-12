@@ -88,3 +88,17 @@ def test_command_maps_name_only_real_cli_verbs(skill):
     cited -= {"--help"}
     unknown = cited - verbs
     assert not unknown, f"{skill}: documents non-existent chip verb(s) {sorted(unknown)}"
+
+
+def test_claude_and_codex_manifests_agree():
+    """The marketplace lists both; they must name the same plugin at the same version."""
+    import json
+
+    from chip.version import VERSION
+
+    claude = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    codex = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    assert claude["name"] == codex["name"] == "chip-contract"
+    assert claude["version"] == codex["version"] == VERSION
+    assert codex["skills"] == "./skills/"
+    assert (ROOT / "skills").is_dir()
